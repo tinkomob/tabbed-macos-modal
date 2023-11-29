@@ -1,62 +1,103 @@
 
 <template>
   <div class="modal">
-    <div class="modal__tabs">
+    <div class="modal__tabs" v-if="hasSidebarSlot">
+      <slot name="sidebar"></slot>
+    </div>
+    <div class="modal__tabs" v-else>
       <div class="modal__tab-head-item" v-for="(item, index) in tabsHeader" :key="index" @click="openTab(item)">
         {{ item }}
       </div>
     </div>
     <div class="modal__content">
       <render />
+      <p>{{ hierarchy }}</p>
       <!-- <slot /> -->
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, useSlots, computed, h } from 'vue'
-import TabbedModalItem from './TabbedModalItem.vue';
+import { ref, useSlots, computed, h, provide, onMounted } from 'vue'
+import { useHierarchy, useCurrent, useAddItem, useClear } from '../composables/modal-store.js';
 
+const makeid = (length) => {
+  var result = '';
+  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
 
-const slots = useSlots().default().map((item, idx) => { 
-  item.key = `${idx + 1}`
-  return item
+useClear()
+const hierarchy = useHierarchy()
+
+const defaultSlots = useSlots().default()
+const slots = useSlots()
+
+const hasSidebarSlot = computed(() => !!slots.sidebar)
+
+const selectedTab = ref('')
+
+const getOnlyComponentsInSlot = (slotsArray) => {
+  return slotsArray.filter(item => item.type.__name == 'TabbedModalItem') || []
+}
+
+selectedTab.value = getOnlyComponentsInSlot(defaultSlots)[0].props.name
+
+useAddItem({
+  current: getOnlyComponentsInSlot(defaultSlots)[0].props.name,
+  parent: 'root'
 })
 
-const selectedTab = ref(0)
 
 const tabsHeader = computed(() => {
-  return slots.map(item => item.props.name)
+  return defaultSlots.map(item => item.props.name)
 })
 
 const render = () => {
   // key нужен чтоб контент таба переписывался корректно при переключении в навигации
-  let comp = slots[selectedTab.value]
-  // console.log(comp.component)
-  // console.log(comp)
-  // comp.component.exposed.slots = comp.component.exposed.slots.filter(item => item.type.__name != "TabbedModalItem")
-  // console.log(comp)
+  let comp = findComp(defaultSlots)
   return h('div', {key: comp.key}, comp)
 };
 
 const openTab = (tabName) => {
-  let idx = slots.findIndex(item => item.props.name == tabName)
-  selectedTab.value = idx
+  useAddItem({
+    current: tabName,
+    parent: 'root',
+    clearAll: true
+  })
+  selectedTab.value = tabName
+}
+
+const findComp = (slotsArray) => {
+  slotsArray = getOnlyComponentsInSlot(slotsArray)
+  for (let slot of slotsArray) {
+    if (slot.props.name == hierarchy[0].current) {
+      slot.key = makeid(10)
+      return slot
+    }
+    
+    if (slot.component?.exposed?.defaultSlots) {
+      let slotSub = findComp(slot.component.exposed.defaultSlots)
+      if (slotSub) return slotSub
+    } 
+  }
 }
 
 const goto = (tabName) => {
-  slots[selectedTab.value].props.openedChild = tabName
-  console.log(slots[selectedTab.value])
-  // console.log()
-  // console.log(tabName)
-}
-
-const name = () => {
-  return 
+  useAddItem({
+    current: tabName,
+    parent: selectedTab.value
+  })
+  selectedTab.value = tabName
 }
 
 defineExpose({
-  goto
+  goto,
+  openTab
 })
 
 </script>
