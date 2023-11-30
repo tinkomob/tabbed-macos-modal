@@ -1,22 +1,22 @@
 
 <template>
   <TabbedModal ref="modal">
-    <template #sidebar>
-        <span style="background-color: red;" @click="modal.openTab('test')">test</span> 
-        <span style="background-color: red;" @click="modal.openTab('gogi')">gogi</span> 
-        <span style="background-color: red;" @click="modal.openTab('task')">smogi</span> 
-    </template>
-    <TabbedModalItem name="test">
+    <!-- <template #sidebar>
+        <span style="background-color: red;" @click="modal.goto('test', true)">test</span> 
+        <span style="background-color: red;" @click="modal.goto('gogi', true)">gogi</span> 
+        <span style="background-color: red;" @click="modal.goto('task', true)">smogi</span> 
+    </template> -->
+    <TabbedModalItem name="test" title="Основное">
       test 123
+      <template #footer>
+       ITEMFOOTER
+      </template>
     </TabbedModalItem>
     <TabbedModalItem name="gogi">
       gogi
       <a href="#" @click="modal.goto('childGogi')">-> childGogi</a>
 
       <TabbedModalItem name="childGogi" @goback="console.log('ugdags')">
-        <template #header>
-          HEADER CHILD GOGI
-        </template>
         I'M CHILD GOGI
         <a href="#" @click="modal.goto('childBABYGogi')">-> childBABYGogi</a>
         <a href="#" @click="modal.goto('childBABYGogi2')">-> childBABYGogi2132121</a>
@@ -25,22 +25,28 @@
           I'M childBABYGogi
           <button @click="childBABYGogi.goBack()">save</button>
         </TabbedModalItem>
+
         <TabbedModalItem name="childBABYGogi2">
-          <template #header>
-            HEADER 22222
-          </template>
           2222222222
+          <template #footer>
+            SDALDSALS LA SDDLSA
+          </template>
         </TabbedModalItem>
+
       </TabbedModalItem>
 
     </TabbedModalItem>
     <TabbedModalItem name="task">
-      <template #header>
-        HEADER
-      </template>
       TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
     </TabbedModalItem>
 
+    <template #mainFooter>
+      MAIN FOOTER
+    </template>
   </TabbedModal>
 </template>
 
@@ -52,11 +58,6 @@ import { ref } from 'vue'
 
 const modal = ref(null)
 const childBABYGogi = ref(null)
-
-// const closechildBABYGogi = () => {
-//   test.value.goBack()
-//   return 
-// }
 
 </script>
 

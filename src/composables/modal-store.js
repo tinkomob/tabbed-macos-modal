@@ -1,6 +1,7 @@
 import { ref, watchEffect, toValue } from 'vue'
 
 const hierarchy = ref([])
+const hasChildFooter = ref(false)
 
 export function useHierarchy() {
   return hierarchy.value
@@ -23,6 +24,13 @@ export function useClear() {
 }
 
 export function useCurrent() {
-  console.log("osdfdsf")
   return hierarchy.value[0]
+}
+
+export function useHaveChildFooter() {
+  return hasChildFooter.value
+}
+
+export function useSetHaveChildFooter(value) {
+  hasChildFooter.value = value
 }
