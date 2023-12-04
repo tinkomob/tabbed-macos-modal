@@ -1,36 +1,57 @@
-import { ref, watchEffect, toValue } from 'vue'
+import { ref } from 'vue'
 
 const hierarchy = ref([])
-const hasChildFooter = ref(false)
 
 export function useHierarchy() {
   return hierarchy.value
 }
 
-export function useAddItem({current= '', parent= 'root', clearAll= false}) {
-  if (clearAll) hierarchy.value.splice(0)
-  if (parent && current) hierarchy.value.unshift({
-    current: current,
-    parent: parent
+export function useSetModalItem(key) {
+  hierarchy.value.unshift({
+    key: key,
+    history: [],
+    hasChildFooter: false
   })
 }
 
-export function useShift() {
-  hierarchy.value.shift()
+export function useAddItem({current= '', parent= 'root', clearAll= false, key= ''}) {
+  const idx = hierarchy.value.findIndex(item => item.key == key)
+  if (idx > -1) { 
+    if (clearAll) { 
+      hierarchy.value[idx].history.splice(0)
+    }
+    if (parent && current) hierarchy.value[idx].history.unshift({
+      current: current,
+      parent: parent
+    })
+  }
 }
 
-export function useClear() {
-  hierarchy.value.splice(0)
+export function useShift(key) {
+  const idx = hierarchy.value.findIndex(item => item.key == key)
+  if (idx > -1) hierarchy.value[idx].history.shift()
+}
+
+export function useClear(key) {
+  const idx = hierarchy.value.findIndex(item => item.key == key)
+  if (idx > -1) hierarchy.value.splice(idx, 1)
 }
 
 export function useCurrent() {
   return hierarchy.value[0]
 }
 
-export function useHaveChildFooter() {
-  return hasChildFooter.value
+export function useHaveChildFooter(key) {
+  const idx = hierarchy.value.findIndex(item => item.key == key)
+  if (idx > -1) {
+    return hierarchy.value[idx].hasChildFooter || false
+  }
+
 }
 
-export function useSetHaveChildFooter(value) {
-  hasChildFooter.value = value
+export function useSetHaveChildFooter(value, key) {
+  const idx = hierarchy.value.findIndex(item => item.key == key)
+  if (idx > -1) {
+    hierarchy.value[idx].hasChildFooter = value
+  }
 }

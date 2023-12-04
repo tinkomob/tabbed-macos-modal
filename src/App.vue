@@ -1,6 +1,6 @@
 
 <template>
-  <TabbedModal ref="modal" :needFooter="true" title="Настройки" v-if="showModal" @close="showModal = false">
+  <TabbedModal ref="modal" :needFooter="true" :simple="false" title="Настройки" v-if="showModal" @close="showModal = false">
     main content
     <!-- <template #sidebar>
         <span style="background-color: red;" @click="modal.goto('test', true)">test</span> 

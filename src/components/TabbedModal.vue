@@ -8,7 +8,7 @@
           <div class="pan__bar"></div>
       </div>
       <div class="modal__container">
-        <div class="modal__sidebar" v-if="props.mode == 'tabbed'">
+        <div class="modal__sidebar" v-if="!props.simple">
           <div class="modal__title" v-if="!hasTitleSlot">{{ props.title }}</div>
           <div class="modal__title" v-else>
             <slot name="title"></slot>
@@ -17,15 +17,15 @@
             <slot name="sidebar"></slot>
           </template>
           <template v-else>
-            <div class="modal__tabs">
-              <div class="modal__tab-head-item" v-for="(item, index) in tabsHeader" :key="index" @click="goto(item.name, true)" :class="{'modal__tab-head-item--active': hierarchy[0].current == item.name}">
+            <div class="modal__tabs h-scrollable">
+              <div class="modal__tab-head-item" v-for="(item, index) in tabsHeader" :key="index" @click="goto(item.name, true)" :class="{'modal__tab-head-item--active': tabIsActive(item.name)}">
                 {{ getTabTitle(item) }}
               </div>
             </div>
           </template>
         </div>
-        <div class="modal__content">
-          <div class="modal__title" v-if="props.mode == 'simple'">
+        <div class="modal__content" :class="{'modal__content-simple': props.simple}">
+          <div class="modal__title" v-if="props.simple">
             <template v-if="!hasTitleSlot">
               {{ props.title }}
             </template>
@@ -34,6 +34,7 @@
             </template>
           </div>
           <render />
+          <!-- {{ hierarchy }} -->
           <div class="modal__footer" v-if="hasFooterSlot && !hasChildFooter && props.needFooter">
             <slot name="mainFooter"></slot>
           </div>
@@ -51,9 +52,9 @@
 </template>
 
 <script setup>
-import { ref, useSlots, computed, h, provide, onMounted, nextTick, onBeforeUnmount } from 'vue'
-import { useHierarchy, useCurrent, useAddItem, useClear, useHaveChildFooter } from '../composables/modal-store.js';
-import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock-upgrade';
+import { ref, useSlots, computed, h, provide, nextTick, onBeforeUnmount } from 'vue'
+import { useHierarchy, useAddItem, useClear, useHaveChildFooter, useSetModalItem } from '../composables/modal-store.js';
+import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock-upgrade';
 import Hammer from "hammerjs";
 
 const makeid = (length) => {
@@ -66,6 +67,8 @@ const makeid = (length) => {
   return result;
 }
 
+const modalId = makeid(15)
+
 const emit = defineEmits(['close', 'opened'])
 
 // -------------------------------------
@@ -76,11 +79,13 @@ const moving = ref(false)
 const topOffset = ref(300)
 let topOffsetInit = 0
 const bottomOffset = ref('unset')
+const modalHeight = ref(600)
 
 const modalStyles = computed(() => {
   return {
     bottom: bottomOffset.value == 'unset' ? bottomOffset.value : bottomOffset.value + 'px',
-    top: topOffset.value == 'unset' ? topOffset.value : topOffset.value + 'px'
+    top: topOffset.value == 'unset' ? topOffset.value : topOffset.value + 'px',
+    // height: modalHeight.value == 'unset' ? modalHeight.value : modalHeight.value + 'px',
   }
 })
 
@@ -93,7 +98,16 @@ onBeforeUnmount(() => {
     hammer.pan?.destroy();
     hammer.content?.destroy();
     enableOverflow()
+    useClear(modalId)
 });
+
+const setModalHeight = () => {
+  const childContentHeight = modal.value.querySelector('.inner-content')?.getBoundingClientRect()?.height
+  modalHeight.value = childContentHeight + 200 // 200 - сумма высот доп. статики
+  if (modalHeight.value > 700) modalHeight.value = 700
+  // console.log(childContentHeight)
+  return 
+}
 
 const init = async () => {
   await nextTick()
@@ -181,8 +195,16 @@ const open = () => {
   modalOpened.value = true;
 
   setTimeout(() => {
-    topOffset.value = (window.innerHeight - modal.value.clientHeight) / 2
-    topOffsetInit = topOffset.value
+    // if (store.state.windowWidth > 768) {
+    if (document.documentElement.clientWidth > 768) {
+      topOffset.value = (window.innerHeight - modal.value.clientHeight) / 2
+      topOffsetInit = topOffset.value
+    }
+    else {
+      topOffset.value = 'unset'
+      bottomOffset.value = 0
+    } 
+    // setModalHeight()
   }, 15);
 
   emit("opened");
@@ -204,12 +226,12 @@ init()
 
 // -------------------------------------
 
-useClear()
+// useClear()
 
 const props = defineProps({
-  mode: {
-    type: String,
-    default: 'tabbed'
+  simple: {
+    type: Boolean,
+    default: false
   },
   needFooter: {
     type: Boolean,
@@ -226,15 +248,17 @@ const props = defineProps({
 })
 
 const hasChildFooter = ref(false)
-const hierarchy = useHierarchy()
+const hierarchy = useHierarchy(modalId)
 const slots = useSlots()
 const defaultSlots = slots.default()
+
 
 const hasSidebarSlot = computed(() => !!slots.sidebar)
 const hasTitleSlot = computed(() => !!slots.title)
 const hasFooterSlot = computed(() => !!slots.mainFooter)
 
 provide('needFooter', props.needFooter)
+provide('modalId', modalId)
 
 const selectedTab = ref('')
 const pan = ref(null)
@@ -250,9 +274,35 @@ const getTabTitle = (item) => {
   return 'tab name'
 }
 
+const history = computed(() => {
+  return hierarchy.find(item => item.key == modalId)?.history || []
+})
+
+const current = computed(() => {
+  return history[0] || null
+})
+
+const tabIsActive = (tabName) => {
+  let root = history.value[history.value.length - 1]
+  if (root) return root.current == tabName
+  return current.value.current == tabName 
+}
+
 selectedTab.value = getOnlyComponentsInSlot(defaultSlots)[0].props.name
 
-useAddItem({
+useSetModalItem(modalId)
+
+const addHierarchyItem = (item) => {
+  useAddItem({
+    current: item.current,
+    parent: item.parent,
+    clearAll: item.clearAll || false,
+    key: modalId
+  })
+  return 
+}
+
+addHierarchyItem({
   current: getOnlyComponentsInSlot(defaultSlots)[0].props.name,
   parent: 'root'
 })
@@ -266,21 +316,28 @@ const tabsHeader = computed(() => {
   })
 })
 
+
 const render = () => {
   // key нужен чтоб контент таба переписывался корректно при переключении в навигации
-  if (props.mode == 'simple') {
+  if (props.simple) {
     return h('div', defaultSlots.filter(item => item.type.__name != 'TabbedModalItem'))
   }
 
   let comp = findComp(defaultSlots)
-  hasChildFooter.value = useHaveChildFooter(props.needFooter)
+
+  hasChildFooter.value = useHaveChildFooter(modalId)
+  // setTimeout(() => {
+  //   // setModalHeight()
+  // }, 100);
+  
+  // почему-то вызывается дважды
   return h('div', {key: comp.key}, comp)
 };
 
 const findComp = (slotsArray) => {
   slotsArray = getOnlyComponentsInSlot(slotsArray)
   for (let slot of slotsArray) {
-    if (slot.props.name == hierarchy[0].current) {
+    if (slot.props.name == hierarchy.find(item => item.key == modalId).history[0].current) {
       slot.key = makeid(10)
       return slot
     }
@@ -294,7 +351,7 @@ const findComp = (slotsArray) => {
 
 const goto = (tabName, root = false) => {
 
-  useAddItem({
+  addHierarchyItem({
     current: tabName,
     parent:  root ? 'root' : selectedTab.value,
     clearAll: root ? true : false
