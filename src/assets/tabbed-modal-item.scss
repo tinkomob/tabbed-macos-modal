@@ -32,19 +32,6 @@
   margin-top: 25px;
 }
 
-.inner-content {
-  overflow-y: auto;
-  padding: 0 16px;
-
-  &::-webkit-scrollbar {
-    width: 2px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #BF3266;
-    border-radius: 10px;
-  }
-}
 
 //--------------------------------------------------------------------------------------//
 //                                        MEDIA                                         //
