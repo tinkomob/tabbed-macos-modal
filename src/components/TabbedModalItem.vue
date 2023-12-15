@@ -1,10 +1,19 @@
 <template>
   <div class="header">
-    <div class="go-back" v-if="isChildItem" @click="goBack()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="black"/>
-      </svg>
-    </div>
+    <template v-if="isSectionsMode">
+      <div class="go-back" v-if="windowWidth < 768 || isChildItem" @click="goBack()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="black"/>
+        </svg>
+      </div>
+    </template>
+    <template v-else>
+      <div class="go-back" v-if="isChildItem" @click="goBack()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="black"/>
+        </svg>
+      </div>
+    </template>
     <template v-if="hasHeaderSlot">
       <slot name="header"></slot>
     </template>
@@ -33,6 +42,7 @@
   const hasFooterSlot = computed(() => !!slots.footer)
 
   const modalId = inject('modalId')
+  const isSectionsMode = inject('isSectionsMode')
   useSetHaveChildFooter(hasFooterSlot.value, modalId)
 
   const defaultSlots = useSlots().default()
@@ -44,7 +54,7 @@
   })
 
   const contentItem = ref(null)
-
+  const windowWidth = ref(document.documentElement.clientWidth)
   const isChildItem = computed(() => {
     const hItem = hierarchy.find(item => item.key == modalId)
     if (hItem.history.length) {
@@ -72,6 +82,7 @@
 
   const goBack = (needEmit = true) => {
     useShift(modalId)
+    useSetHaveChildFooter(false, modalId)
     if (needEmit) emit('goback')
   }
 

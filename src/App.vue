@@ -1,6 +1,18 @@
 
 <template>
-  <TabbedModal :height="600" :need-close-icon="true" ref="modal" :needFooter="true" :simple="false" :pan="false" title="Настройки" v-if="showModal" @close="showModal = false">
+    <TabbedModal 
+      :open-first-section="true" 
+      :sidebar-search="true"  
+      :height="600" 
+      :need-close-icon="true" 
+      ref="modal" 
+      :needFooter="true" 
+      :simple="false" 
+      :pan="false" 
+      title="Настройки" 
+      v-if="showModal" 
+      @close="showModal = false"
+    >
     Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus nulla at reprehenderit laudantium error ratione aperiam, impedit, enim praesentium molestias ipsum harum odio. Fugit qui aspernatur, dolore eius quod veniam, inventore porro dolorem earum laboriosam nostrum corporis quis nulla atque facere omnis, a possimus ea voluptatum mollitia consequuntur quam? Adipisci ullam quis sint nesciunt iste recusandae, rerum inventore maiores ad ut quod ea odio architecto hic ratione at exercitationem, quibusdam laboriosam error doloribus suscipit. Iusto unde asperiores omnis quod rem ea illo debitis qui incidunt, officia earum, perspiciatis illum hic optio natus ex. Deleniti modi sunt ad nam ratione aliquam provident mollitia iure, vero voluptatibus earum! Inventore, in eum quidem veniam quasi iure asperiores mollitia modi possimus soluta numquam, magni libero aperiam delectus corporis ex corrupti laudantium aspernatur. Consectetur esse quam fuga obcaecati laborum cum, adipisci molestias numquam dignissimos repudiandae laboriosam temporibus recusandae corrupti non facere nostrum, molestiae, odit amet ullam. Illo quaerat obcaecati molestias, magni praesentium enim aliquid molestiae tenetur odio a harum consequatur voluptatum libero natus incidunt nihil impedit, suscipit corrupti eum quod repellendus dolorem. Quo nesciunt quasi praesentium obcaecati veritatis assumenda id illo libero iure soluta facere, sequi magnam sunt eos deleniti optio placeat dignissimos, earum repudiandae adipisci. Officiis voluptas inventore odit dolorem placeat quas est veniam tenetur aspernatur. Aliquam adipisci consectetur accusamus architecto quasi? Repudiandae quam sed accusamus, assumenda, eius perspiciatis ullam expedita quaerat non quis aliquam, soluta nihil reprehenderit eligendi. Suscipit architecto eligendi, distinctio natus quasi ipsum porro quo iure accusantium quia? Saepe recusandae officia neque. Voluptatibus fugiat sed laboriosam saepe eaque modi accusantium ab quos fugit. Sed quam cumque, ea quas sapiente placeat in voluptates commodi excepturi exercitationem? Odit corrupti id eligendi deleniti mollitia itaque beatae fugiat corporis vitae sunt alias quibusdam minima ex consequatur blanditiis, fuga veritatis quae similique eum suscipit earum? Pariatur?
     <!-- <template #sidebar>
         <span style="background-color: red;" @click="modal.goto('test', true)">test</span> 
@@ -62,6 +74,69 @@
       </template>
     </TabbedModalItem>
 
+    <TabbedModalItem name="task1" title="Товары">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
+    <TabbedModalItem name="task2">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
+    <TabbedModalItem name="task3">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
+    <TabbedModalItem name="task4">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
+    <TabbedModalItem name="task5">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
+    <TabbedModalItem name="task6">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
+    <TabbedModalItem name="task7">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
+      <TabbedModalItem name="task8">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
+    <TabbedModalItem name="task9">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
     <template #mainFooter>
       MAIN FOOTER
     </template>

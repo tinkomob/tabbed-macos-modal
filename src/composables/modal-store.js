@@ -49,6 +49,14 @@ export function useHaveChildFooter(key) {
 
 }
 
+export function useSetCurrentTitle(title, key) {
+  const idx = hierarchy.value.findIndex(item => item.key == key)
+  if (idx > -1) {
+    return hierarchy.value[idx].history[0].title = title
+  }
+
+}
+
 export function useSetHaveChildFooter(value, key) {
   const idx = hierarchy.value.findIndex(item => item.key == key)
   if (idx > -1) {
