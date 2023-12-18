@@ -45,8 +45,6 @@
   const isSectionsMode = inject('isSectionsMode')
   useSetHaveChildFooter(hasFooterSlot.value, modalId)
 
-  const defaultSlots = useSlots().default()
-  
   const props = defineProps({
     name: String,
     title: String,
@@ -75,7 +73,7 @@
   const hierarchy = useHierarchy(modalId)
   
   const render = () => {
-    let toRender = defaultSlots.filter(item => item.type.__name != 'TabbedModalItem')
+    let toRender = slots.default().filter(item => item.type.__name != 'TabbedModalItem')
     return h('div', {class: 'inner-content' }, toRender)
   }
   
@@ -91,7 +89,7 @@
 
   defineExpose({
     goBack,
-    defaultSlots
+    defaultSlots: slots.default()
   })
 </script>
 

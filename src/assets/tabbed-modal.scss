@@ -223,6 +223,28 @@
   }
 }
 
+
+:deep(.content) {
+  margin-top: 25px;
+}
+
+:deep(.header) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  padding-top: 14px;
+}
+
+:deep(.header__title) {
+  display: flex;
+  align-items: center;
+  // font-family: "Roboto Bold", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: #474747;
+}
+
 //--------------------------------------------------------------------------------------//
 //                                        MEDIA                                         //
 //--------------------------------------------------------------------------------------//
@@ -238,6 +260,19 @@
   .h-scrollable {
     overflow-y: hidden;
     overflow-x: auto;
+  }
+
+
+  :deep(.content) {
+    margin-top: 0;
+  }
+
+  :deep(.header) {
+    padding-top: 0;
+  }
+
+  :deep(.header__title) {
+    display: none;
   }
 
   .sidebar-sections {

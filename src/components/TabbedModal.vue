@@ -101,10 +101,12 @@
 </template>
 
 <script setup>
-import { ref, useSlots, computed, h, provide, nextTick, onBeforeUnmount, getCurrentInstance } from 'vue'
+import { ref, useSlots, computed, h, provide, nextTick, onBeforeUnmount, getCurrentInstance, onUpdated } from 'vue'
 import { useHierarchy, useAddItem, useClear, useHaveChildFooter, useSetModalItem, useSetCurrentTitle } from '../composables/modal-store.js';
 import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock-upgrade';
 import Hammer from "hammerjs";
+import TabbedModalItem from './TabbedModalItem.vue';
+import deepCopy from 'deep-copy-all';
 
 const props = defineProps({
   sidebarSearch: {
@@ -273,7 +275,7 @@ const setContentHeightDesktop = () => {
   const innerContent = modal.value.querySelector('.inner-content')
   if (innerContent) innerContent.style.height = modalHeight.value - staticHeight + 'px'
 
-  setTabsHeight()
+  if (!props.simple) setTabsHeight()
 }
 
 const isIphone = () => {
@@ -286,6 +288,8 @@ const isIphone = () => {
 const setModalHeight = () => {
   const staticHeight = heightStaticElements()
   const innerContent = modal.value.querySelector('.inner-content')
+  console.log(innerContent)
+  console.log(innerContent?.getBoundingClientRect())
   const childContentHeight = innerContent?.getBoundingClientRect()?.height
   
   modalHeight.value = childContentHeight + staticHeight
@@ -372,8 +376,8 @@ const move = (event, type) => {
   }
 }
 
-const enableOverflow = () => {
-  setTimeout(() => {
+const enableOverflow = async () => {
+  nextTick(() => {
     let openedModalsList = document.getElementsByClassName("modal-item opened");
     if (!openedModalsList.length) {
       let body = document.querySelector('.app-body')
@@ -385,7 +389,7 @@ const enableOverflow = () => {
       body.style.overflowY = 'auto'
       document.body.style.removeProperty('overflow')
     }
-  }, 60);
+  })
 }
 
 const disableOverflow = () => {
@@ -406,9 +410,9 @@ const open = () => {
   modalOpened.value = true;
 
   if (windowWidth.value > 768) {
-    setTimeout(() => {
+    nextTick(() => {
       setContentHeightDesktop()
-    }, 15);
+    })
   }
 
   emit("opened");
@@ -436,7 +440,6 @@ const hasChildFooter = computed(() => {
 })
 const hierarchy = useHierarchy(modalId)
 const slots = useSlots()
-const defaultSlots = slots.default()
 const searchValue = ref('')
 
 
@@ -476,7 +479,7 @@ const tabIsActive = (tabName) => {
   return current.value.current == tabName 
 }
 
-selectedTab.value = getOnlyComponentsInSlot(defaultSlots)[0].props?.name
+selectedTab.value = getOnlyComponentsInSlot(slots.default())[0]?.props?.name || null
 
 useSetModalItem(modalId)
 
@@ -492,19 +495,19 @@ const addHierarchyItem = (item) => {
 
 if (props.sectionsMode) {
   if (windowWidth.value > 768 || props.openFirstSection) addHierarchyItem({
-    current: getOnlyComponentsInSlot(defaultSlots)[0].props.name,
+    current: getOnlyComponentsInSlot(slots.default())[0]?.props?.name,
     parent: 'root'
   })
 } 
 else {
   addHierarchyItem({
-    current: getOnlyComponentsInSlot(defaultSlots)[0].props.name,
+    current: getOnlyComponentsInSlot(slots.default())[0]?.props?.name,
     parent: 'root'
   })
 }
 
 const tabsHeader = computed(() => {
-  let tabs = getOnlyComponentsInSlot(defaultSlots).map(item => {
+  let tabs = getOnlyComponentsInSlot(slots.default()).map(item => {
     return {
       name: item.props.name,
       title: item.props.title
@@ -523,48 +526,76 @@ const tabsHeader = computed(() => {
     })
   }
   
-  setTimeout(() => {
+  nextTick(() => {
     if (!searchValue.value && windowWidth.value < 768) setModalHeight()    
-  }, 30);
+  })
 
   return tabs
 })
 
-const render = () => {
-  if (windowWidth.value < 768) {
-    setTimeout(() => {
+
+onUpdated(() => {
+  // nextTick(() => {
+    // console.log('e')
+    callAfterRender()
+  // })
+})
+
+const callAfterRender = async () => {
+  await nextTick()
+  console.log('rerender')
+  // alert('dasd')
+  // не переписывается height, если вручную в devtools отключать и вкл height у inner-content, то всё работает
+  // setTimeout(() => {
+    console.log('ea')
+    if (windowWidth.value < 768) {
       if (!searchValue.value) {
         setModalHeight()
       } else {
         if (history.value.length) setModalHeight()
       }
-    }, 30);
-  }
-  else {
-    setTimeout(() => {
+    }
+    else {
       setContentHeightDesktop()
-    }, 15);
-  }
+    }
+  // }, 750);
+}
 
+const defaultSlots = slots.default()
+const render = () => {
+  
   if (props.sectionsMode && !history.value.length && windowWidth.value < 768) {
     return h('div', {class: 'content' }, [h('div', {class: 'inner-content' }, '' )])
   }
 
   if (props.simple) {
-    return h('div', {class: 'content' }, [h('div', {class: 'inner-content' }, defaultSlots.filter(item => item.type.__name != 'TabbedModalItem'))])
+    return h('div', {class: 'content' }, [h('div', {class: 'inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
   }
 
+  if (!slots.default().filter(item => item.type.__name == 'TabbedModalItem').length) {
+    return h('div', {}, [
+      h('div', { class: 'header' }, [h('span', { class: 'header__title' }, '')]),
+      h('div', { class: 'content' }, [h('div', { class: 'inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
+    ])
+  }
+  // console.log(defaultSlots)
   let comp = findComp(defaultSlots)
-  if (comp.props.title) { 
+  if (comp && comp.props.title) { 
     useSetCurrentTitle(comp.props.title, modalId)
   }
-  
+
+  // nextTick(() => {
+  // setTimeout(() => {
+  //   callAfterRender()
+  // }, 1000);
+  // })
   // key нужен чтоб контент таба переписывался корректно при переключении в навигации
   return h('div', {key: comp.key}, comp)
 };
 
 const findComp = (slotsArray) => {
   slotsArray = getOnlyComponentsInSlot(slotsArray)
+  // console.log(slotsArray)
   for (let slot of slotsArray) {
     if (slot.props.name == hierarchy.find(item => item.key == modalId).history[0].current) {
       slot.key = makeid(10)
