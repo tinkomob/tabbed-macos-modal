@@ -28,7 +28,7 @@
             </div>
           </template>
           <div class="modal__sidebar-search" v-if="props.sidebarSearch && (windowWidth > 768 || (props.sectionsMode && !history.length))">
-            <input type="search" v-model="searchValue" name="sidebar_search" class="modal__sidebar-search-input" placeholder="Поиск...">
+            <input type="search" v-model="searchValue" name="sidebar_search" class="modal__sidebar-search-input" autocomplete="off" placeholder="Поиск...">
           </div>
           <template v-if="props.sectionsMode">
             <template v-if="hasSidebarSlot">
@@ -105,7 +105,6 @@ import { ref, useSlots, computed, h, provide, nextTick, onBeforeUnmount, getCurr
 import { useHierarchy, useAddItem, useClear, useHaveChildFooter, useSetModalItem, useSetCurrentTitle } from '../composables/modal-store.js';
 import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock-upgrade';
 import Hammer from "hammerjs";
-import TabbedModalItem from './TabbedModalItem.vue';
 import deepCopy from 'deep-copy-all';
 
 const props = defineProps({
@@ -148,10 +147,10 @@ const props = defineProps({
 })
 
 const makeid = (length) => {
-  var result = '';
-  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  var charactersLength = characters.length;
-  for (var i = 0; i < length; i++) {
+  let result = '';
+  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
@@ -163,11 +162,23 @@ const emit = defineEmits(['close', 'opened'])
 
 // -------------------------------------
 
+const slots = useSlots()
+
+const selectedTab = ref('')
+const pan = ref(null)
+const hierarchy = useHierarchy(modalId)
+const searchValue = ref('')
+
+const hasSidebarSlot = computed(() => !!slots.sidebar)
+const hasTitleSlot = computed(() => !!slots.title)
+const hasFooterSlot = computed(() => !!slots.mainFooter)
+
 const modal = ref(null)
 const modalOpened = ref(false)
 const moving = ref(false)
 const modalHeight = ref(props.height)
 const windowWidth = ref(document.documentElement.clientWidth)
+const initTabsHeight = ref('')
 
 const bottomOffset = ref('unset')
 let bottomOffsetInit = 0
@@ -224,7 +235,7 @@ const heightStaticElements = (desktop = false) => {
     if (!desktop) sumH += sidebarHeight 
     if (desktop) {
       const marginTop = getComputedStyle(modalParentDiv.querySelector('.content'))?.marginTop
-      sumH += Number(marginTop.replace('px', ''))
+      sumH += pxToNumber(marginTop)
     }
 
 
@@ -279,27 +290,49 @@ const setContentHeightDesktop = () => {
 }
 
 const isIphone = () => {
-    const iPhone =
-        /iPhone/.test(navigator.userAgent) && !window.MSStream;
-    const aspect = window.screen.width / window.screen.height;
-    return iPhone && aspect.toFixed(3) === "0.462";
-};
+  const iPhone = /iPhone/.test(navigator.userAgent) && !window.MSStream;
+  const aspect = window.screen.width / window.screen.height;
+  return iPhone && aspect.toFixed(3) === "0.462";
+}
+
+onUpdated(() => {
+  callAfterRender()
+})
+
+const callAfterRender = async () => {
+  await nextTick()
+  if (windowWidth.value < 768) {
+    setModalHeight()
+  }
+  else {
+    setContentHeightDesktop()
+  }
+}
 
 const setModalHeight = () => {
   const staticHeight = heightStaticElements()
   const innerContent = modal.value.querySelector('.inner-content')
-  console.log(innerContent)
-  console.log(innerContent?.getBoundingClientRect())
-  const childContentHeight = innerContent?.getBoundingClientRect()?.height
-  
-  modalHeight.value = childContentHeight + staticHeight
-  if (modalHeight.value >= document.documentElement.clientHeight) modalHeight.value = document.documentElement.clientHeight - 60 - (isIphone() ? 30 : 0)
-  if (innerContent) innerContent.style.height = Math.abs(modalHeight.value - staticHeight) + 'px'
-  if (props.sectionsMode) {
-    const heightStatic = heightStaticSectionsMode()
-    const sectionTabs = modal.value.querySelector('.sections-mode')
-    if (sectionTabs) sectionTabs.style.height = Math.abs(modalHeight.value - heightStatic) + 'px'
+  if (innerContent && innerContent.style.height && innerContent.getAttribute('style'))  {
+    innerContent.style.removeProperty('height')
   }
+  const childContentHeight = innerContent?.scrollHeight
+  let h = childContentHeight + staticHeight
+  
+  if (h >= document.documentElement.clientHeight) h = document.documentElement.clientHeight - 60 - (isIphone() ? 30 : 0)
+  modalHeight.value = h
+    if (innerContent) innerContent.style.height = Math.abs(modalHeight.value - staticHeight) + 'px'
+    if (props.sectionsMode) {
+      const heightStatic = heightStaticSectionsMode()
+      const sectionTabs = modal.value.querySelector('.sections-mode')
+      if (sectionTabs) {
+        sectionTabs.style.height = Math.abs(modalHeight.value - heightStatic) + 'px'
+
+        if(!history.value.length && windowWidth.value < 768) {
+          if (!initTabsHeight.value) initTabsHeight.value = sectionTabs.style.height
+          else sectionTabs.style.height = initTabsHeight.value
+        }
+      }
+    }
   return 
 }
 
@@ -360,14 +393,14 @@ const move = (event, type) => {
   } else if (event.type === "panup" || event.type === "pandown") {
     moving.value = true;
     if (event.deltaY > 0) {
-      modal.value.style.bottom = bottomOffsetInit + delta + 'px';
+      modal.value.style.bottom = numberToPx(bottomOffsetInit + delta)
     }
   }
   if (event.isFinal) {
     contentScroll = modal.value.scrollTop;
     moving.value = false;
     
-    if (Number(modal.value.style.bottom.replace('px', '')) < bottomOffsetInit - 60) {
+    if (pxToNumber(modal.value.style.bottom) < bottomOffsetInit - 60) {
       bottomOffset.value = 0;
       close()
     } else {
@@ -431,28 +464,17 @@ const clickOnBottomSheet = (event) => {
 }
 
 init()
-// -------------------------------------
 
-// useClear()
+// -------------------------------------
 
 const hasChildFooter = computed(() => {
   return useHaveChildFooter(modalId)
 })
-const hierarchy = useHierarchy(modalId)
-const slots = useSlots()
-const searchValue = ref('')
 
-
-const hasSidebarSlot = computed(() => !!slots.sidebar)
-const hasTitleSlot = computed(() => !!slots.title)
-const hasFooterSlot = computed(() => !!slots.mainFooter)
 
 provide('needFooter', props.needFooter)
 provide('modalId', modalId)
 provide('isSectionsMode', props.sectionsMode)
-
-const selectedTab = ref('')
-const pan = ref(null)
 
 const getOnlyComponentsInSlot = (slotsArray) => {
   return slotsArray.filter(item => item.type.__name == 'TabbedModalItem') || []
@@ -527,39 +549,14 @@ const tabsHeader = computed(() => {
   }
   
   nextTick(() => {
-    if (!searchValue.value && windowWidth.value < 768) setModalHeight()    
+    if (!searchValue.value && windowWidth.value < 768) {
+      setModalHeight()    
+    }
   })
 
   return tabs
 })
 
-
-onUpdated(() => {
-  // nextTick(() => {
-    // console.log('e')
-    callAfterRender()
-  // })
-})
-
-const callAfterRender = async () => {
-  await nextTick()
-  console.log('rerender')
-  // alert('dasd')
-  // не переписывается height, если вручную в devtools отключать и вкл height у inner-content, то всё работает
-  // setTimeout(() => {
-    console.log('ea')
-    if (windowWidth.value < 768) {
-      if (!searchValue.value) {
-        setModalHeight()
-      } else {
-        if (history.value.length) setModalHeight()
-      }
-    }
-    else {
-      setContentHeightDesktop()
-    }
-  // }, 750);
-}
 
 const defaultSlots = slots.default()
 const render = () => {
@@ -578,24 +575,18 @@ const render = () => {
       h('div', { class: 'content' }, [h('div', { class: 'inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
     ])
   }
-  // console.log(defaultSlots)
+  
   let comp = findComp(defaultSlots)
   if (comp && comp.props.title) { 
     useSetCurrentTitle(comp.props.title, modalId)
   }
 
-  // nextTick(() => {
-  // setTimeout(() => {
-  //   callAfterRender()
-  // }, 1000);
-  // })
   // key нужен чтоб контент таба переписывался корректно при переключении в навигации
   return h('div', {key: comp.key}, comp)
 };
 
 const findComp = (slotsArray) => {
   slotsArray = getOnlyComponentsInSlot(slotsArray)
-  // console.log(slotsArray)
   for (let slot of slotsArray) {
     if (slot.props.name == hierarchy.find(item => item.key == modalId).history[0].current) {
       slot.key = makeid(10)

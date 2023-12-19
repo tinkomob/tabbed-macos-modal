@@ -1,7 +1,7 @@
 
 <template>
     <TabbedModal 
-      :open-first-section="true" 
+      :open-first-section="false" 
       :sidebar-search="true"  
       :height="600"
       :sections-mode="true" 
@@ -43,12 +43,16 @@
 
       <TabbedModalItem name="childGogi" @goback="console.log('ugdags')">
         I'M CHILD GOGI
-        <img src="/46.jpg" alt="" style="width: 100%;" v-if="displayImage">
+        <button class="button" @click="displayImage = !displayImage">click mem</button>
+        <!-- <img src="/46.jpg" alt="" style="width: 100%; height: 250px"> -->
         <a href="#" @click="modal.goto('childBABYGogi')">-> childBABYGogi</a>
         <a href="#" @click="modal.goto('childBABYGogi2')">-> childBABYGogi2132121</a>
-        <template v-if="displayImage">
+        <div class="test" v-if="displayImage">
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure, laudantium asperiores in magnam earum quidem distinctio repellat perferendis perspiciatis suscipit, maxime aliquid assumenda, voluptatem est quasi nesciunt natus amet quos harum. Culpa voluptate similique ad accusamus eos exercitationem reiciendis officia? Saepe quo distinctio vel eius repellendus id ducimus possimus dignissimos.
-        </template>
+        </div>
+        <div class="beautiful-block" v-if="!displayImage" style="width: 50px; height: 50px; background-color: red;"></div>
+          <!-- Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure, laudantium asperiores in magnam earum quidem distinctio repellat perferendis perspiciatis suscipit, maxime aliquid assumenda, voluptatem est quasi nesciunt natus amet quos harum. Culpa voluptate similique ad accusamus eos exercitationem reiciendis officia? Saepe quo distinctio vel eius repellendus id ducimus possimus dignissimos.
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure, laudantium asperiores in magnam earum quidem distinctio repellat perferendis perspiciatis suscipit, maxime aliquid assumenda, voluptatem est quasi nesciunt natus amet quos harum. Culpa voluptate similique ad accusamus eos exercitationem reiciendis officia? Saepe quo distinctio vel eius repellendus id ducimus possimus dignissimos. -->
 
 
         <TabbedModalItem name="childBABYGogi" ref="childBABYGogi" @goback="console.log('ifsaf')">
@@ -157,18 +161,18 @@
 import TabbedModal from './components/TabbedModal.vue'
 import TabbedModalItem from './components/TabbedModalItem.vue'
 
-import { ref } from 'vue'
+import { ref, onBeforeUnmount, onMounted } from 'vue'
 
-const displayImage = ref(false)
+const displayImage = ref(true)
 const modal = ref(null)
 const showModal = ref(false)
 const childBABYGogi = ref(null)
 
-setInterval(() => {
-  // console.log('set int')
-  displayImage.value = !displayImage.value 
-  // console.log(displayImage.value)
-}, 3000);
+// const intervar = () => displayImage.value = !displayImage.value
+
+// onMounted(() => setInterval(() => intervar(), 3000))
+
+// onBeforeUnmount(() => clearInterval(intervar))
 
 </script>
 

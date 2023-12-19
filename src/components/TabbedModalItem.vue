@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-  import { onMounted, useSlots, h, getCurrentInstance, ref, inject, provide, computed } from 'vue'
+  import { onMounted, useSlots, h, getCurrentInstance, ref, inject, provide, computed, onBeforeUnmount } from 'vue'
 
   const emit = defineEmits(['goback'])
 
@@ -84,7 +84,34 @@
     if (needEmit) emit('goback')
   }
 
+  let touchstartX = 0
+  let touchendX = 0
+      
+  const checkDirection = () => {
+    if (touchendX < touchstartX && ((Math.abs(touchstartX - touchendX)) > 80)) goBack()
+  }
+
+  const touchstart = (e) => {
+    touchstartX = e.changedTouches[0].screenX
+  }
+
+  const touchend = (e) => {
+    touchendX = e.changedTouches[0].screenX
+    checkDirection()
+  }
+
   onMounted(() => {
+    if (windowWidth.value < 768) {
+      document.addEventListener('touchstart', touchstart)
+      document.addEventListener('touchend', touchend)
+    }
+  })
+
+  onBeforeUnmount(() => {
+    if (windowWidth.value < 768) {
+      document.removeEventListener('touchstart', touchstart)
+      document.removeEventListener('touchend', touchend)
+    }
   })
 
   defineExpose({
