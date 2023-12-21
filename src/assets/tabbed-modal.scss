@@ -70,29 +70,6 @@
     position: relative;
   }
 
-  &__tab-head-item {
-    font-size: 14px;
-    transition-duration: 200ms;
-    transition-delay: 20ms;
-    transition-property: background-color;
-    cursor: pointer;
-    color: #5c5c5c;
-    width: 100%;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    height: 32px;
-    border-radius: 7px;
-    padding-left: 7px;
-    -webkit-tap-highlight-color: transparent
-  }
-
-  &__tab-head-item--active {
-    cursor: default;
-    background-color: #dce0e4;
-    color: #333333;
-  }
-
   &__sidebar {
     min-width: 180px;
     width: 180px;
@@ -113,7 +90,7 @@
     padding-bottom: 0;
   }
 
-  &__content-simple {
+  &__title-simple {
     padding: 14px 16px;
     margin-bottom: 0;
   }
@@ -251,6 +228,10 @@
   color: #474747;
 }
 
+:deep(.modal__content-simple .content) {
+  margin-top: 0;
+}
+
 //--------------------------------------------------------------------------------------//
 //                                        MEDIA                                         //
 //--------------------------------------------------------------------------------------//
@@ -304,19 +285,6 @@
       border-radius: 10px;
     }
 
-    .modal__tab-head-item {
-      justify-content: start;
-      align-items: center;
-      height: 50px;
-      max-height: 50px;
-      min-height: 50px;
-      // background-color: #f1f1f1;
-    }
-
-    .modal__tab-head-item:hover {
-      background-color: #e6eaee;
-    }
-
     &__title-with-arrow {
       display: flex;
       align-items: center;
@@ -325,12 +293,6 @@
     &__title-with-arrow .go-back {
       height: 24px;
       margin-right: 15px;
-    }
-
-    &__section-arrow {
-      position: relative;
-      margin-left: auto;
-      bottom: -2px;
     }
   }
 
@@ -353,20 +315,6 @@
 
     &__title {
       // order: 2;
-    }
-
-    &__tabs {
-      display: flex;
-      align-items: center;
-      // order: 1;
-      gap: 10px;
-    }
-
-    &__tab-head-item {
-      padding: 8px 12px;
-      text-align: center;
-      justify-content: center;
-      user-select: none;
     }
 
     &__container {

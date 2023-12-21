@@ -32,52 +32,28 @@
           </div>
           <template v-if="props.sectionsMode">
             <template v-if="hasSidebarSlot">
-              <div class="modal__tabs" v-if="!history.length || windowWidth > 768" :class="{'sections-mode': props.sectionsMode, 'h-scrollable': !props.sectionsMode}">
+              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab">
                 <slot name="sidebar"></slot>
-              </div>
+              </HeaderTabs>
             </template>
             <template v-else>
-              <div class="modal__tabs" v-if="!history.length || windowWidth > 768" :class="{'sections-mode': props.sectionsMode, 'h-scrollable': !props.sectionsMode}">
-                <div class="modal__tab-head-item" v-for="(item, index) in tabsHeader" :key="index" @click="goto(item.name, true)" :class="{'modal__tab-head-item--active': !props.sectionsMode ? tabIsActive(item.name) : false}">
-                    {{ getTabTitle(item) }}
-                    <svg xmlns="http://www.w3.org/2000/svg" class="sections-mode__section-arrow" fill="#000000" width="16px" height="16px" viewBox="0 0 24 24" v-if="props.sectionsMode && windowWidth < 768">
-                      <g data-name="Layer 2">
-                        <g data-name="arrow-ios-forward">
-                          <rect width="24" height="24" transform="rotate(-90 12 12)" opacity="0"/>
-                          <path d="M10 19a1 1 0 0 1-.64-.23 1 1 0 0 1-.13-1.41L13.71 12 9.39 6.63a1 1 0 0 1 .15-1.41 1 1 0 0 1 1.46.15l4.83 6a1 1 0 0 1 0 1.27l-5 6A1 1 0 0 1 10 19z"/>
-                        </g>
-                      </g>
-                    </svg>
-                </div>
-              </div>
+              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab" />
             </template>
           </template>
           <template v-else>
             <template v-if="hasSidebarSlot">
-              <div class="modal__tabs" :class="{'sections-mode': props.sectionsMode, 'h-scrollable': !props.sectionsMode}">
+              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab">
                 <slot name="sidebar"></slot>
-              </div>
+              </HeaderTabs>
             </template>
             <template v-else>
-              <div class="modal__tabs" :class="{'sections-mode': props.sectionsMode, 'h-scrollable': !props.sectionsMode}">
-                <div class="modal__tab-head-item" v-for="(item, index) in tabsHeader" :key="index" @click="goto(item.name, true)" :class="{'modal__tab-head-item--active': !props.sectionsMode ? tabIsActive(item.name) : false}">
-                    {{ getTabTitle(item) }}
-                    <svg xmlns="http://www.w3.org/2000/svg" class="sections-mode__section-arrow" fill="#000000" width="16px" height="16px" viewBox="0 0 24 24" v-if="props.sectionsMode && windowWidth < 768">
-                      <g data-name="Layer 2">
-                        <g data-name="arrow-ios-forward">
-                          <rect width="24" height="24" transform="rotate(-90 12 12)" opacity="0"/>
-                          <path d="M10 19a1 1 0 0 1-.64-.23 1 1 0 0 1-.13-1.41L13.71 12 9.39 6.63a1 1 0 0 1 .15-1.41 1 1 0 0 1 1.46.15l4.83 6a1 1 0 0 1 0 1.27l-5 6A1 1 0 0 1 10 19z"/>
-                        </g>
-                      </g>
-                    </svg>
-                </div>
-              </div>
+              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab" />
             </template>
           </template>
 
         </div>
-        <div class="modal__content">
-          <div class="modal__title" v-if="props.simple" :class="{'modal__content-simple': props.simple}">
+        <div class="modal__content" :class="{'modal__content-simple': props.simple}">
+          <div class="modal__title" v-if="props.simple" :class="{'modal__title-simple': props.simple}">
             <template v-if="!hasTitleSlot">
               {{ props.title }}
             </template>
@@ -102,10 +78,11 @@
 
 <script setup>
 import { ref, useSlots, computed, h, provide, nextTick, onBeforeUnmount, getCurrentInstance, onUpdated } from 'vue'
-import { useHierarchy, useAddItem, useClear, useHaveChildFooter, useSetModalItem, useSetCurrentTitle } from '../composables/modal-store.js';
+import { useHierarchy, useAddItem, useClear, useHaveChildFooter, useSetModalItem, useSetCurrentTitle, useWindowWidth } from '../composables/modal-store.js';
 import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock-upgrade';
 import Hammer from "hammerjs";
 import deepCopy from 'deep-copy-all';
+import HeaderTabs from './HeaderTabs.vue';
 
 const props = defineProps({
   sidebarSearch: {
@@ -177,7 +154,7 @@ const modal = ref(null)
 const modalOpened = ref(false)
 const moving = ref(false)
 const modalHeight = ref(props.height)
-const windowWidth = ref(document.documentElement.clientWidth)
+const windowWidth = useWindowWidth(true)
 const initTabsHeight = ref('')
 
 const bottomOffset = ref('unset')
@@ -341,15 +318,22 @@ const heightStaticSectionsMode = () => {
     const footerHeight = modal.value.querySelector('.modal__footer')?.getBoundingClientRect()?.height || 0
     const panHeight = modal.value.querySelector('.pan')?.getBoundingClientRect()?.height || 0
     const sidebar = modal.value.querySelector('.modal__sidebar')
-    let {paddingTop, paddingBottom} = getComputedStyle(sidebar)
+
     const modalTitle = modal.value.querySelector('.modal__title')
     const modalTitleHeight = modalTitle.getBoundingClientRect()?.height
     const modalTitleMarginBottom = pxToNumber(getComputedStyle(modalTitle).marginBottom)
-    let h = footerHeight + panHeight + pxToNumber(paddingTop) + pxToNumber(paddingBottom) + modalTitleHeight + modalTitleMarginBottom
+    let h = footerHeight + panHeight + modalTitleHeight + modalTitleMarginBottom
+
+    if (sidebar) {
+      let {paddingTop, paddingBottom} = getComputedStyle(sidebar)
+      h += pxToNumber(paddingTop) + pxToNumber(paddingBottom)
+    }
+
     if (props.sidebarSearch) {
       const sidebarSearchHeight = modal.value.querySelector('.modal__sidebar-search')?.getBoundingClientRect()?.height || 0
       h += sidebarSearchHeight 
     }
+
     return h
   }
 
@@ -480,13 +464,6 @@ const getOnlyComponentsInSlot = (slotsArray) => {
   return slotsArray.filter(item => item.type.__name == 'TabbedModalItem') || []
 }
 
-const getTabTitle = (item) => {
-  if (item.title) return item.title
-  if (item.name) return item.name
-
-  return 'tab name'
-}
-
 const history = computed(() => {
   return hierarchy.find(item => item.key == modalId)?.history || []
 })
@@ -495,11 +472,6 @@ const current = computed(() => {
   return history[0]
 })
 
-const tabIsActive = (tabName) => {
-  let root = history.value[history.value.length - 1]
-  if (root) return root.current == tabName
-  return current.value.current == tabName 
-}
 
 selectedTab.value = getOnlyComponentsInSlot(slots.default())[0]?.props?.name || null
 
@@ -515,7 +487,7 @@ const addHierarchyItem = (item) => {
   return 
 }
 
-if (props.sectionsMode) {
+if (props.sectionsMode && !props.simple) {
   if (windowWidth.value > 768 || props.openFirstSection) addHierarchyItem({
     current: getOnlyComponentsInSlot(slots.default())[0]?.props?.name,
     parent: 'root'
@@ -600,6 +572,10 @@ const findComp = (slotsArray) => {
       }
     } 
   }
+}
+
+const gotoTab = ({tabName, root = false}) => {
+  goto(tabName, root)
 }
 
 const goto = (tabName, root = false) => {

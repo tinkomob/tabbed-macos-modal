@@ -34,7 +34,7 @@
 
   const emit = defineEmits(['goback'])
 
-  import { useHierarchy, useShift, useSetHaveChildFooter } from '../composables/modal-store.js';
+  import { useHierarchy, useShift, useSetHaveChildFooter, useWindowWidth } from '../composables/modal-store.js';
 
   const slots = useSlots()
   const needFooter = inject('needFooter')
@@ -52,7 +52,7 @@
   })
 
   const contentItem = ref(null)
-  const windowWidth = ref(document.documentElement.clientWidth)
+  const windowWidth = useWindowWidth()
   const isChildItem = computed(() => {
     const hItem = hierarchy.find(item => item.key == modalId)
     if (hItem.history.length) {

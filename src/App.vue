@@ -1,7 +1,7 @@
 
 <template>
     <TabbedModal 
-      :open-first-section="false" 
+      :open-first-section="true" 
       :sidebar-search="true"  
       :height="600"
       :sections-mode="true" 

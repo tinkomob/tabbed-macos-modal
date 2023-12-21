@@ -1,9 +1,14 @@
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 
 const hierarchy = ref([])
 
 export function useHierarchy() {
   return hierarchy.value
+}
+
+export function useHistory(key) {
+  if (hierarchy.value.length) return hierarchy.value.find(item => item.key == key)?.history
+  return []
 }
 
 export function useSetModalItem(key) {
@@ -62,4 +67,21 @@ export function useSetHaveChildFooter(value, key) {
   if (idx > -1) {
     hierarchy.value[idx].hasChildFooter = value
   }
+}
+
+export function useWindowWidth(needEvent = false) {
+  const width = ref(0)
+
+  width.value = document.documentElement.clientWidth
+
+  function update() {
+    width.value = document.documentElement.clientWidth
+  }
+
+  if (needEvent) {
+    onMounted(() => window.addEventListener('resize', update))
+    onUnmounted(() => window.removeEventListener('resize', update))
+  }
+
+  return width
 }
