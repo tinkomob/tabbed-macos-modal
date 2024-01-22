@@ -32,22 +32,22 @@
           </div>
           <template v-if="props.sectionsMode">
             <template v-if="hasSidebarSlot">
-              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="goto">
+              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab">
                 <slot name="sidebar"></slot>
               </HeaderTabs>
             </template>
             <template v-else>
-              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="goto" />
+              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab" />
             </template>
           </template>
           <template v-else>
             <template v-if="hasSidebarSlot">
-              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="goto">
+              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab">
                 <slot name="sidebar"></slot>
               </HeaderTabs>
             </template>
             <template v-else>
-              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="goto" />
+              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab" />
             </template>
           </template>
 
@@ -583,6 +583,10 @@ const findComp = (slotsArray) => {
       }
     }
   }
+}
+
+const gotoTab = ({tabName, root = false}) => {
+  goto(tabName, root)
 }
 
 const goto = (tabName, root = false) => {
