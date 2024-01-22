@@ -1,3 +1,5 @@
+@import './vars.scss';
+
 .modal {
   &__tab-head-item {
     font-size: 14px;
@@ -18,8 +20,8 @@
 
   &__tab-head-item--active {
     cursor: default;
-    background-color: #dce0e4;
-    color: #333333;
+    background-color: var(--sidebar-tab-active-bg);
+    color: var(--sidebar-tab-active-color);
   }
 }
 

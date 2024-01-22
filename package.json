@@ -12,6 +12,7 @@
     "body-scroll-lock-upgrade": "^1.0.4",
     "deep-copy-all": "^1.3.4",
     "hammerjs": "^2.0.8",
+    "imagesloaded": "^5.0.0",
     "vue": "^3.3.8"
   },
   "devDependencies": {

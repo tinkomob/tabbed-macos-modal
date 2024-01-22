@@ -44,7 +44,7 @@
   const modalId = inject('modalId')
   const isSectionsMode = inject('isSectionsMode')
   useSetHaveChildFooter(hasFooterSlot.value, modalId)
-
+  
   const props = defineProps({
     name: String,
     title: String,

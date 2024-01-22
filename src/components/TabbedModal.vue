@@ -32,22 +32,22 @@
           </div>
           <template v-if="props.sectionsMode">
             <template v-if="hasSidebarSlot">
-              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab">
+              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="goto">
                 <slot name="sidebar"></slot>
               </HeaderTabs>
             </template>
             <template v-else>
-              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab" />
+              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="goto" />
             </template>
           </template>
           <template v-else>
             <template v-if="hasSidebarSlot">
-              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab">
+              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="goto">
                 <slot name="sidebar"></slot>
               </HeaderTabs>
             </template>
             <template v-else>
-              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab" />
+              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="goto" />
             </template>
           </template>
 
@@ -83,6 +83,7 @@ import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock-upgrade';
 import Hammer from "hammerjs";
 import deepCopy from 'deep-copy-all';
 import HeaderTabs from './HeaderTabs.vue';
+import imagesLoaded from 'imagesloaded'
 
 const props = defineProps({
   sidebarSearch: {
@@ -289,14 +290,17 @@ const callAfterRender = async () => {
 const setModalHeight = () => {
   const staticHeight = heightStaticElements()
   const innerContent = modal.value.querySelector('.inner-content')
-  if (innerContent && innerContent.style.height && innerContent.getAttribute('style'))  {
-    innerContent.style.removeProperty('height')
-  }
-  const childContentHeight = innerContent?.scrollHeight
-  let h = childContentHeight + staticHeight
   
-  if (h >= document.documentElement.clientHeight) h = document.documentElement.clientHeight - 60 - (isIphone() ? 30 : 0)
-  modalHeight.value = h
+  // imagesLoaded решает проблему с динамическим расчётом высоты модалки если есть фотки, т.к. фотки не сразу грузятся, а до того момента высота не определена (как я понял) 
+  imagesLoaded(innerContent, () => {
+    if (innerContent && innerContent.style.height && innerContent.getAttribute('style')) {
+      innerContent.style.removeProperty('height')
+    }
+    const childContentHeight = innerContent?.scrollHeight
+    let h = childContentHeight + staticHeight
+
+    if (h >= document.documentElement.clientHeight) h = document.documentElement.clientHeight - 60 - (isIphone() ? 30 : 0)
+    modalHeight.value = h
     if (innerContent) innerContent.style.height = Math.abs(modalHeight.value - staticHeight) + 'px'
     if (props.sectionsMode) {
       const heightStatic = heightStaticSectionsMode()
@@ -304,13 +308,14 @@ const setModalHeight = () => {
       if (sectionTabs) {
         sectionTabs.style.height = Math.abs(modalHeight.value - heightStatic) + 'px'
 
-        if(!history.value.length && windowWidth.value < 768) {
+        if (!history.value.length && windowWidth.value < 768) {
           if (!initTabsHeight.value) initTabsHeight.value = sectionTabs.style.height
           else sectionTabs.style.height = initTabsHeight.value
         }
       }
     }
-  return 
+    return
+  })
 }
 
 const heightStaticSectionsMode = () => {
@@ -532,7 +537,6 @@ const tabsHeader = computed(() => {
 
 const defaultSlots = slots.default()
 const render = () => {
-  
   if (props.sectionsMode && !history.value.length && windowWidth.value < 768) {
     return h('div', {class: 'content' }, [h('div', {class: 'inner-content' }, '' )])
   }
@@ -564,18 +568,21 @@ const findComp = (slotsArray) => {
       slot.key = makeid(10)
       return slot
     }
-    
     if (slot.component?.exposed?.defaultSlots) {
+      // console.log(slot.component.exposed.defaultSlots)
       let slotSub = findComp(slot.component.exposed.defaultSlots)
       if (slotSub) { 
         return slotSub
       }
     } 
+    
+    if (typeof slot?.children == 'object') {
+      let slotSub = findComp(slot.children.default())
+      if (slotSub) { 
+        return slotSub
+      }
+    }
   }
-}
-
-const gotoTab = ({tabName, root = false}) => {
-  goto(tabName, root)
 }
 
 const goto = (tabName, root = false) => {
