@@ -4,54 +4,31 @@
     @touchstart="clickOnBottomSheet">
     <div class="modal-item__backdrop" />
     <div class="modal" ref="modal" :style="modalStyles" :class="{moving: moving}">
-      <div ref="pan" class="pan" v-if="props.pan || windowWidth < 768">
+      <div ref="pan" class="pan" v-if="(props.panDesktop && windowWidth > 768) || (props.panMobile && windowWidth < 768)">
           <div class="pan__bar"></div>
       </div>
       <div class="modal__container">
-        <div class="modal__sidebar" v-if="!props.simple" :class="{'sidebar-sections': props.sectionsMode}">
-          <template v-if="props.sectionsMode">
-            <template v-if="windowWidth < 768">
-              <div class="modal__title">{{ history[0]?.title ? history[0].title : history[0]?.current ? history[0]?.current : props.title ? props.title : 'Окно' }}</div>
-            </template>
-            <template v-else>
-              <div class="modal__title" v-if="!hasTitleSlot">{{ props.title }}</div>
-              <div class="modal__title" v-else>
-                <slot name="title"></slot>
-              </div>
-            </template>
+        <Sidebar 
+          v-if="!props.simple" 
+          :history="currentHistory" 
+          :current="current" 
+          :tabs-header="tabsHeader" 
+          :sidebar-search="props.sidebarSearch"
+          @goto="gotoTab" 
+          @search="search"
+          :sections-mode="props.sectionsMode" 
+          :current-title="currentTitle" 
+          :title="props.title"
+        >
+          <template v-if="hasTitleSlot" #title>
+            <slot name="title"></slot>
           </template>
 
-          <template v-else>
-            <div class="modal__title" v-if="!hasTitleSlot">{{ props.title }}</div>
-            <div class="modal__title" v-else>
-              <slot name="title"></slot>
-            </div>
-          </template>
-          <div class="modal__sidebar-search" v-if="props.sidebarSearch && (windowWidth > 768 || (props.sectionsMode && !history.length))">
-            <input type="search" v-model="searchValue" name="sidebar_search" class="modal__sidebar-search-input" autocomplete="off" placeholder="Поиск...">
-          </div>
-          <template v-if="props.sectionsMode">
-            <template v-if="hasSidebarSlot">
-              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab">
-                <slot name="sidebar"></slot>
-              </HeaderTabs>
-            </template>
-            <template v-else>
-              <HeaderTabs v-if="!history.length || windowWidth > 768" :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab" />
-            </template>
-          </template>
-          <template v-else>
-            <template v-if="hasSidebarSlot">
-              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab">
-                <slot name="sidebar"></slot>
-              </HeaderTabs>
-            </template>
-            <template v-else>
-              <HeaderTabs :sections-mode="props.sectionsMode" :history="history" :current="current" :tabs-header="tabsHeader" @goto="gotoTab" />
-            </template>
+          <template v-if="hasSidebarSlot" #sidebar>
+            <slot name="sidebar"></slot>
           </template>
 
-        </div>
+        </Sidebar>
         <div class="modal__content" :class="{'modal__content-simple': props.simple}">
           <div class="modal__title" v-if="props.simple" :class="{'modal__title-simple': props.simple}">
             <template v-if="!hasTitleSlot">
@@ -77,13 +54,13 @@
 </template>
 
 <script setup>
-import { ref, useSlots, computed, h, provide, nextTick, onBeforeUnmount, getCurrentInstance, onUpdated } from 'vue'
-import { useHierarchy, useAddItem, useClear, useHaveChildFooter, useSetModalItem, useSetCurrentTitle, useWindowWidth } from '../composables/modal-store.js';
+import { ref, useSlots, computed, h, provide, nextTick, onBeforeUnmount, onUpdated } from 'vue'
+import { useUtils } from '../composables/useUtils.js';
+import { useWindowWidth } from '../composables/useWindowWidth.js';
+import { useHistory } from '../composables/useModalStore.js';
 import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock-upgrade';
 import Hammer from "hammerjs";
-import deepCopy from 'deep-copy-all';
-import HeaderTabs from './HeaderTabs.vue';
-import imagesLoaded from 'imagesloaded'
+import Sidebar from './Sidebar/Sidebar.vue';
 
 const props = defineProps({
   sidebarSearch: {
@@ -110,7 +87,11 @@ const props = defineProps({
     type: String,
     default: 'Default Title'
   },
-  pan: {
+  panDesktop: {
+    type: Boolean,
+    default: true
+  },
+  panMobile: {
     type: Boolean,
     default: true
   },
@@ -124,32 +105,32 @@ const props = defineProps({
   }
 })
 
-const makeid = (length) => {
-  let result = '';
-  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-}
+const utils = useUtils()
 
-const modalId = makeid(15)
-
-const emit = defineEmits(['close', 'opened'])
-
-// -------------------------------------
+const modalId = utils.makeId(15)
 
 const slots = useSlots()
-
-const selectedTab = ref('')
-const pan = ref(null)
-const hierarchy = useHierarchy(modalId)
-const searchValue = ref('')
 
 const hasSidebarSlot = computed(() => !!slots.sidebar)
 const hasTitleSlot = computed(() => !!slots.title)
 const hasFooterSlot = computed(() => !!slots.mainFooter)
+
+const hammer = {
+    pan: null,
+    content: null,
+}
+
+provide('needFooter', props.needFooter)
+provide('panMobile', props.panMobile)
+provide('modalId', modalId)
+provide('isSectionsMode', props.sectionsMode)
+
+const history = useHistory(modalId)
+
+const emit = defineEmits(['close', 'opened'])
+
+const pan = ref(null)
+const searchValue = ref('')
 
 const modal = ref(null)
 const modalOpened = ref(false)
@@ -161,6 +142,34 @@ const initTabsHeight = ref('')
 const bottomOffset = ref('unset')
 let bottomOffsetInit = 0
 
+const init = async () => {
+  await nextTick()
+  initHammer()
+  open()
+}
+
+onUpdated(() => {
+  callAfterRender()
+})
+
+onBeforeUnmount(() => {
+    hammer.pan?.destroy();
+    hammer.content?.destroy();
+    enableOverflow()
+    history.clear(modalId)
+});
+
+const callAfterRender = async () => {
+  await nextTick()
+  if (windowWidth.value < 768) {
+    setModalHeight()
+  }
+  else {
+    setContentHeightDesktop()
+  }
+}
+
+// -------------- MODAL CONTAINER STYLES AND CALCULATIONS -----------------------
 const modalStyles = computed(() => {
   const result = {}
   if (modal.value) {
@@ -180,18 +189,6 @@ const modalStyles = computed(() => {
 
   return result
 })
-
-const hammer = {
-    pan: null,
-    content: null,
-}
-
-onBeforeUnmount(() => {
-    hammer.pan?.destroy();
-    hammer.content?.destroy();
-    enableOverflow()
-    useClear(modalId)
-});
 
 const heightStaticElements = (desktop = false) => {
   const innerContent = modal.value.querySelector('.inner-content')
@@ -213,7 +210,7 @@ const heightStaticElements = (desktop = false) => {
     if (!desktop) sumH += sidebarHeight 
     if (desktop) {
       const marginTop = getComputedStyle(modalParentDiv.querySelector('.content'))?.marginTop
-      sumH += pxToNumber(marginTop)
+      sumH += utils.pxToNumber(marginTop)
     }
 
 
@@ -223,38 +220,20 @@ const heightStaticElements = (desktop = false) => {
   return 0
 }
 
-const pxToNumber = (value) => {
-  if (value) {
-    value = Number(value.replace('px', ''))
-
-    return value
-  }
-  return 0
-}
-
-const numberToPx = (value) => {
-  if (value) {
-    value = value + 'px'
-
-    return value
-  }
-  return '0px'
-}
-
 const setTabsHeight = () => {
   if (modal.value) {
     const tabsDiv = modal.value.querySelector('.modal__tabs')
-    const modalHeight = pxToNumber(modal.value.style.height)
+    const modalHeight = utils.pxToNumber(modal.value.style.height)
 
     const modalTitle = modal.value.querySelector('.modal__title')
     const modalTitleHeight = modalTitle.getBoundingClientRect()?.height
-    const modalTitleMarginBottom = pxToNumber(getComputedStyle(modalTitle).marginBottom)
+    const modalTitleMarginBottom = utils.pxToNumber(getComputedStyle(modalTitle).marginBottom)
 
     const sidebarStyles = getComputedStyle(modal.value.querySelector('.modal__sidebar'))
-    const sidebarPaddingTop = pxToNumber(sidebarStyles.paddingTop)
-    const sidebarPaddingBottom = pxToNumber(sidebarStyles.paddingBottom)
+    const sidebarPaddingTop = utils.pxToNumber(sidebarStyles.paddingTop)
+    const sidebarPaddingBottom = utils.pxToNumber(sidebarStyles.paddingBottom)
 
-    tabsDiv.style.height = numberToPx(modalHeight - modalTitleHeight - modalTitleMarginBottom - sidebarPaddingTop - sidebarPaddingBottom)
+    tabsDiv.style.height = utils.numberToPx(modalHeight - modalTitleHeight - modalTitleMarginBottom - sidebarPaddingTop - sidebarPaddingBottom)
   }
 
 }
@@ -267,55 +246,35 @@ const setContentHeightDesktop = () => {
   if (!props.simple) setTabsHeight()
 }
 
-const isIphone = () => {
-  const iPhone = /iPhone/.test(navigator.userAgent) && !window.MSStream;
-  const aspect = window.screen.width / window.screen.height;
-  return iPhone && aspect.toFixed(3) === "0.462";
-}
-
-onUpdated(() => {
-  callAfterRender()
-})
-
-const callAfterRender = async () => {
-  await nextTick()
-  if (windowWidth.value < 768) {
-    setModalHeight()
-  }
-  else {
-    setContentHeightDesktop()
-  }
-}
-
-const setModalHeight = () => {
+const setModalHeight = async () => {
   const staticHeight = heightStaticElements()
   const innerContent = modal.value.querySelector('.inner-content')
-  
+
   // imagesLoaded решает проблему с динамическим расчётом высоты модалки если есть фотки, т.к. фотки не сразу грузятся, а до того момента высота не определена (как я понял) 
-  imagesLoaded(innerContent, () => {
-    if (innerContent && innerContent.style.height && innerContent.getAttribute('style')) {
-      innerContent.style.removeProperty('height')
-    }
-    const childContentHeight = innerContent?.scrollHeight
-    let h = childContentHeight + staticHeight
+  await utils.imagesIsLoaded(innerContent)
 
-    if (h >= document.documentElement.clientHeight) h = document.documentElement.clientHeight - 60 - (isIphone() ? 30 : 0)
-    modalHeight.value = h
-    if (innerContent) innerContent.style.height = Math.abs(modalHeight.value - staticHeight) + 'px'
-    if (props.sectionsMode) {
-      const heightStatic = heightStaticSectionsMode()
-      const sectionTabs = modal.value.querySelector('.sections-mode')
-      if (sectionTabs) {
-        sectionTabs.style.height = Math.abs(modalHeight.value - heightStatic) + 'px'
+  if (innerContent && innerContent.style.height && innerContent.getAttribute('style')) {
+    innerContent.style.removeProperty('height')
+  }
+  const childContentHeight = innerContent?.scrollHeight
+  let h = childContentHeight + staticHeight
 
-        if (!history.value.length && windowWidth.value < 768) {
-          if (!initTabsHeight.value) initTabsHeight.value = sectionTabs.style.height
-          else sectionTabs.style.height = initTabsHeight.value
-        }
+  if (h >= document.documentElement.clientHeight) h = document.documentElement.clientHeight - 60 - (utils.isIphone() ? 30 : 0)
+  modalHeight.value = h
+  if (innerContent) innerContent.style.height = Math.abs(modalHeight.value - staticHeight) + 'px'
+  if (props.sectionsMode) {
+    const heightStatic = heightStaticSectionsMode()
+    const sectionTabs = modal.value.querySelector('.sections-mode')
+    if (sectionTabs) {
+      sectionTabs.style.height = Math.abs(modalHeight.value - heightStatic) + 'px'
+
+      if (!currentHistory.length && windowWidth.value < 768) {
+        if (!initTabsHeight.value) initTabsHeight.value = sectionTabs.style.height
+        else sectionTabs.style.height = initTabsHeight.value
       }
     }
-    return
-  })
+  }
+  return
 }
 
 const heightStaticSectionsMode = () => {
@@ -326,12 +285,12 @@ const heightStaticSectionsMode = () => {
 
     const modalTitle = modal.value.querySelector('.modal__title')
     const modalTitleHeight = modalTitle.getBoundingClientRect()?.height
-    const modalTitleMarginBottom = pxToNumber(getComputedStyle(modalTitle).marginBottom)
+    const modalTitleMarginBottom = utils.pxToNumber(getComputedStyle(modalTitle).marginBottom)
     let h = footerHeight + panHeight + modalTitleHeight + modalTitleMarginBottom
 
     if (sidebar) {
       let {paddingTop, paddingBottom} = getComputedStyle(sidebar)
-      h += pxToNumber(paddingTop) + pxToNumber(paddingBottom)
+      h += utils.pxToNumber(paddingTop) + utils.pxToNumber(paddingBottom)
     }
 
     if (props.sidebarSearch) {
@@ -343,15 +302,6 @@ const heightStaticSectionsMode = () => {
   }
 
   return 0
-}
-
-const init = async () => {
-  await nextTick()
-
-  initHammer()
-
-  open()
-
 }
 
 const initHammer = () => {
@@ -382,14 +332,14 @@ const move = (event, type) => {
   } else if (event.type === "panup" || event.type === "pandown") {
     moving.value = true;
     if (event.deltaY > 0) {
-      modal.value.style.bottom = numberToPx(bottomOffsetInit + delta)
+      modal.value.style.bottom = utils.numberToPx(bottomOffsetInit + delta)
     }
   }
   if (event.isFinal) {
     contentScroll = modal.value.scrollTop;
     moving.value = false;
     
-    if (pxToNumber(modal.value.style.bottom) < bottomOffsetInit - 60) {
+    if (utils.pxToNumber(modal.value.style.bottom) < bottomOffsetInit - 60) {
       bottomOffset.value = 0;
       close()
     } else {
@@ -399,19 +349,18 @@ const move = (event, type) => {
 }
 
 const enableOverflow = async () => {
-  nextTick(() => {
-    let openedModalsList = document.getElementsByClassName("modal-item opened");
-    if (!openedModalsList.length) {
-      let body = document.querySelector('.app-body')
-      enableBodyScroll(body);
-      document.documentElement.style.overflow = 'auto'
-      document.documentElement.style.overflowY = 'auto'
+  await nextTick()
+  let openedModalsList = document.getElementsByClassName("modal-item opened");
+  if (!openedModalsList.length) {
+    let body = document.querySelector('.app-body')
+    enableBodyScroll(body);
+    document.documentElement.style.overflow = 'auto'
+    document.documentElement.style.overflowY = 'auto'
 
-      body.style.overflow = 'auto'
-      body.style.overflowY = 'auto'
-      document.body.style.removeProperty('overflow')
-    }
-  })
+    body.style.overflow = 'auto'
+    body.style.overflowY = 'auto'
+    document.body.style.removeProperty('overflow')
+  }
 }
 
 const disableOverflow = () => {
@@ -452,57 +401,55 @@ const clickOnBottomSheet = (event) => {
   }
 }
 
-init()
-
 // -------------------------------------
-
-const hasChildFooter = computed(() => {
-  return useHaveChildFooter(modalId)
-})
-
-
-provide('needFooter', props.needFooter)
-provide('modalId', modalId)
-provide('isSectionsMode', props.sectionsMode)
 
 const getOnlyComponentsInSlot = (slotsArray) => {
   return slotsArray.filter(item => item.type.__name == 'TabbedModalItem') || []
 }
 
-const history = computed(() => {
-  return hierarchy.find(item => item.key == modalId)?.history || []
+const getFirstComponentName = (slotsArray) => {
+  return getOnlyComponentsInSlot(slotsArray)[0]?.props?.name || null
+}
+
+const currentHistory = computed(() => {
+  return history.history.value.find(item => item.modalId == modalId)?.history || []
 })
 
 const current = computed(() => {
-  return history[0]
+  return currentHistory.value[0]
 })
 
+const currentTitle = computed(() => {
+  if (current.value) {
+    if (current.value.title) return current.value.title
+    if (current.value.current) return current.value.current
+  }
+  
+  if (props.title) return props.title
 
-selectedTab.value = getOnlyComponentsInSlot(slots.default())[0]?.props?.name || null
+  return 'Окно'
+})
 
-useSetModalItem(modalId)
+const hasChildFooter = computed(() => {
+  return history.hasChildFooter(modalId)
+})
 
-const addHierarchyItem = (item) => {
-  useAddItem({
-    current: item.current,
-    parent: item.parent,
-    clearAll: item.clearAll || false,
+if (!props.simple && (props.openFirstSection || windowWidth.value > 768)) {
+  history.addItem({
+    current: getFirstComponentName(slots.default()),
     key: modalId
   })
-  return 
 }
 
-if (props.sectionsMode && !props.simple) {
-  if (windowWidth.value > 768 || props.openFirstSection) addHierarchyItem({
-    current: getOnlyComponentsInSlot(slots.default())[0]?.props?.name,
-    parent: 'root'
-  })
-} 
-else {
-  addHierarchyItem({
-    current: getOnlyComponentsInSlot(slots.default())[0]?.props?.name,
-    parent: 'root'
-  })
+const handleSearchText = (value) => {
+  return value
+    .toLocaleLowerCase()
+    .replace(/[^A-Za-zА-Яа-яёЁ0-9@]/g, "")
+    .replace("ё", "е");
+}
+
+const search = (value) => {
+  searchValue.value = value
 }
 
 const tabsHeader = computed(() => {
@@ -514,13 +461,10 @@ const tabsHeader = computed(() => {
   })
 
   if (props.sidebarSearch && searchValue.value) {
-    let searchText = searchValue.value.toLocaleLowerCase().replace(/[^A-Za-zА-Яа-яёЁ0-9@]/g, "")
-        .replace("ё", "е");
+    let searchText = handleSearchText(searchValue.value)
+
     tabs = tabs.filter(item => {
-      let name = item.title ?? item.name
-      name = name.toLocaleLowerCase()
-        .replace(/[^A-Za-zА-Яа-яёЁ0-9@]/g, "")
-        .replace("ё", "е");
+      let name = handleSearchText(item.title ?? item.name)
       if (name.indexOf(searchText) !== -1) return name.indexOf(searchText) !== -1;
     })
   }
@@ -537,7 +481,8 @@ const tabsHeader = computed(() => {
 
 const defaultSlots = slots.default()
 const render = () => {
-  if (props.sectionsMode && !history.value.length && windowWidth.value < 768) {
+  
+  if (!props.simple && props.sectionsMode && !currentHistory.value.length && windowWidth.value < 768) {
     return h('div', {class: 'content' }, [h('div', {class: 'inner-content' }, '' )])
   }
 
@@ -551,25 +496,24 @@ const render = () => {
       h('div', { class: 'content' }, [h('div', { class: 'inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
     ])
   }
-  
   let comp = findComp(defaultSlots)
   if (comp && comp.props.title) { 
-    useSetCurrentTitle(comp.props.title, modalId)
+    history.setCurrentTitle(comp.props.title, modalId)
   }
 
-  // key нужен чтоб контент таба переписывался корректно при переключении в навигации
+  // key нужен чтобы контент таба переписывался корректно при переключении в навигации
   return h('div', {key: comp.key}, comp)
 };
 
 const findComp = (slotsArray) => {
   slotsArray = getOnlyComponentsInSlot(slotsArray)
   for (let slot of slotsArray) {
-    if (slot.props.name == hierarchy.find(item => item.key == modalId).history[0].current) {
-      slot.key = makeid(10)
+    if (slot.props.name == current.value.current) {
+      slot.key = utils.makeId(10)
       return slot
     }
     if (slot.component?.exposed?.defaultSlots) {
-      // console.log(slot.component.exposed.defaultSlots)
+      
       let slotSub = findComp(slot.component.exposed.defaultSlots)
       if (slotSub) { 
         return slotSub
@@ -590,19 +534,19 @@ const gotoTab = ({tabName, root = false}) => {
 }
 
 const goto = (tabName, root = false) => {
-  addHierarchyItem({
+  history.addItem({
     current: tabName,
     title: '',
-    parent:  root ? 'root' : selectedTab.value,
-    clearAll: root ? true : false
+    clearAll: root,
+    key: modalId 
   })
-
-  selectedTab.value = tabName
 }
 
 defineExpose({
   goto
 })
+
+init()
 
 </script>
 

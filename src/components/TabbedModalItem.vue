@@ -1,19 +1,10 @@
 <template>
   <div class="header">
-    <template v-if="isSectionsMode">
-      <div class="go-back" v-if="windowWidth < 768 || isChildItem" @click="goBack()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="black"/>
-        </svg>
-      </div>
-    </template>
-    <template v-else>
-      <div class="go-back" v-if="isChildItem" @click="goBack()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="black"/>
-        </svg>
-      </div>
-    </template>
+    <div class="go-back" :class="{'go-back__no-mobile-pan': !panMobile}" v-if="isChildItem" @click="goBack()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="black"/>
+      </svg>
+    </div>
     <template v-if="hasHeaderSlot">
       <slot name="header"></slot>
     </template>
@@ -30,21 +21,27 @@
 </template>
 
 <script setup>
-  import { onMounted, useSlots, h, getCurrentInstance, ref, inject, provide, computed, onBeforeUnmount } from 'vue'
+  import { onMounted, useSlots, h, ref, inject, computed, onBeforeUnmount } from 'vue'
 
   const emit = defineEmits(['goback'])
 
-  import { useHierarchy, useShift, useSetHaveChildFooter, useWindowWidth } from '../composables/modal-store.js';
+  import { useWindowWidth } from '../composables/useWindowWidth.js';
+  import { useHistory } from '../composables/useModalStore.js';
+
+  const windowWidth = useWindowWidth()
 
   const slots = useSlots()
   const needFooter = inject('needFooter')
   const hasHeaderSlot = computed(() => !!slots.header)
   const hasFooterSlot = computed(() => !!slots.footer)
-
+  const panMobile = inject('panMobile')
   const modalId = inject('modalId')
   const isSectionsMode = inject('isSectionsMode')
-  useSetHaveChildFooter(hasFooterSlot.value, modalId)
   
+  const history = useHistory(modalId)
+
+  history.setChildFooter(hasFooterSlot.value, modalId)
+
   const props = defineProps({
     name: String,
     title: String,
@@ -52,13 +49,13 @@
   })
 
   const contentItem = ref(null)
-  const windowWidth = useWindowWidth()
   const isChildItem = computed(() => {
-    const hItem = hierarchy.find(item => item.key == modalId)
-    if (hItem.history.length) {
-      if (hItem.history[0].parent != 'root') return hItem.history[0]
-    }
+    const localHistory = history.history.value.find(item => item.modalId == modalId)
 
+    if (localHistory.history.length) {
+      if (isSectionsMode && windowWidth.value < 768) return true
+      if (localHistory.history[0].parent != 'root') return true
+    }
     return false
   })
 
@@ -70,7 +67,6 @@
     return 'Tab title'
   })
 
-  const hierarchy = useHierarchy(modalId)
   
   const render = () => {
     let toRender = slots.default().filter(item => item.type.__name != 'TabbedModalItem')
@@ -79,8 +75,8 @@
   
 
   const goBack = (needEmit = true) => {
-    useShift(modalId)
-    useSetHaveChildFooter(false, modalId)
+    history.goBack(modalId) 
+    history.setChildFooter(false, modalId)
     if (needEmit) emit('goback')
   }
 
@@ -88,7 +84,11 @@
   let touchendX = 0
       
   const checkDirection = () => {
-    if (touchendX < touchstartX && ((Math.abs(touchstartX - touchendX)) > 80)) goBack()
+    if (touchendX < touchstartX && ((Math.abs(touchstartX - touchendX)) > 80)){
+      const localHistory = history.history.value.find(item => item.modalId == modalId)
+      if (isSectionsMode) goBack()
+      if (localHistory.history.length > 1) goBack()
+    } 
   }
 
   const touchstart = (e) => {

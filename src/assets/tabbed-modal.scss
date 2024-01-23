@@ -1,64 +1,20 @@
 @import './vars.scss';
 
 .modal {
-  // display: flex;
-  // width: 800px;
   border-radius: 14px;
   overflow: hidden;
   color: #474747;
-  // height: 500px;
   position: fixed;
   left: 50%;
-  // transform: translate(0);
   z-index: 999999;
   transform: translate(-50%, 0);
   transition: bottom 0.3s ease;
   transition: height 0.3s ease;
   background-color: var(--main-bg-color);
 
-  &__sidebar-search-input {
-    font-size: 14px;
-    transition-duration: 200ms;
-    transition-delay: 20ms;
-    transition-property: background-color;
-    // cursor: pointer;
-    color: var(--sidebar-search-input-color);
-    width: 100%;
-    background-color: var(--sidebar-search-input-bg);
-    display: flex;
-    justify-content: flex-start;
-    border: none;
-    align-items: center;
-    height: 32px;
-    border-radius: 7px;
-    padding-left: 7px;
-    -webkit-tap-highlight-color: transparent;
-    margin-bottom: 7px;
-
-    &:placeholder-shown {
-      text-overflow: ellipsis;
-    }
-  }
-
-  &__sidebar-search-input:focus {
-    outline: none;
-  }
-
-  &__sidebar-search-input::-webkit-search-cancel-button {
-    position: relative;
-    right: 6px;
-    height: 20px;
-    width: 20px;
-    cursor: pointer;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23777'><path d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/></svg>");
-    appearance: none;
-    // background: #000;
-  }
-
   &__container {
     position: relative;
     display: flex;
-    // height: 520px;
     height: 100%;
   }
 
@@ -67,19 +23,7 @@
     margin-bottom: 16px;
     position: relative;
   }
-
-  &__sidebar {
-    min-width: 180px;
-    width: 180px;
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-top: 14px;
-    padding-bottom: 14px;
-    border-right: 1px solid var(--sidebar-border-right-color);
-    background: var(--sidebar-bg-color);
-    z-index: 20;
-  }
-
+  
   &__content {
     background-color: var(--main-bg-color);
     max-width: 100%;
@@ -174,22 +118,6 @@
   }
 }
 
-.h-scrollable {
-  flex-wrap: nowrap;
-  width: 100%;
-  overflow-y: auto;
-  // overflow-x: scroll;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  -ms-overflow-style: none;
-  /* IE and Edge */
-  scrollbar-width: none;
-  /* Firefox */
-}
-
 :deep(.inner-content) {
   overflow-y: auto;
   padding: 0 16px;
@@ -226,6 +154,10 @@
   color: #474747;
 }
 
+:deep(.inner-content) img {
+  width: 100%;
+}
+
 :deep(.modal__content-simple .content) {
   margin-top: 0;
 }
@@ -247,7 +179,6 @@
     overflow-x: auto;
   }
 
-
   :deep(.content) {
     margin-top: 0;
   }
@@ -260,90 +191,19 @@
     display: none;
   }
 
-  .sidebar-sections {
-    padding: 0;
-
-    .modal__title {
-      padding: 0 16px;
-      padding-top: 14px;
-    }
-  }
-
-  .sections-mode {
-    flex-direction: column;
-    overflow-y: auto;
-    padding: 0 16px;
-
-    &::-webkit-scrollbar {
-      width: 2px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: #BF3266;
-      border-radius: 10px;
-    }
-
-    &__title-with-arrow {
-      display: flex;
-      align-items: center;
-    }
-
-    &__title-with-arrow .go-back {
-      height: 24px;
-      margin-right: 15px;
-    }
-  }
-
-
   .modal {
     width: 100%;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     height: 0;
 
-    &__sidebar {
-      width: 100%;
-      max-width: 100%;
-      background-color: var(--main-bg-color);
-      display: flex;
-      flex-direction: column;
-      gap: 0px;
-      border: none;
-    }
-
-    &__title {
-      // order: 2;
-    }
-
     &__container {
       height: 100%;
+      flex-direction: column;
     }
 
     &__content {
       width: 100%;
     }
-
-    &__tab-head-item--active {
-      background-color: var(--sidebar-tab-active-bg);
-      color: var(--sidebar-tab-active-color);
-
-    }
-
-    &__container {
-      flex-direction: column;
-    }
-
-    &__sidebar-search {
-      padding: 0 14px;
-    }
-
-    &__sidebar-search-input {
-      background: var(--sidebar-search-input-bg-mobile);
-      height: 45px;
-    }
-  }
-
-  :deep(.modal__footer) {
-    // bottom: 66px;
   }
 }

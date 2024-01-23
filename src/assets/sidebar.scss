@@ -1,0 +1,106 @@
+@import './vars.scss';
+
+.modal {
+  &__sidebar-search-input {
+    font-size: 14px;
+    transition-duration: 200ms;
+    transition-delay: 20ms;
+    transition-property: background-color;
+    // cursor: pointer;
+    color: var(--sidebar-search-input-color);
+    width: 100%;
+    background-color: var(--sidebar-search-input-bg);
+    display: flex;
+    justify-content: flex-start;
+    border: none;
+    align-items: center;
+    height: 32px;
+    border-radius: 7px;
+    padding-left: 7px;
+    -webkit-tap-highlight-color: transparent;
+    margin-bottom: 7px;
+
+    &:placeholder-shown {
+      text-overflow: ellipsis;
+    }
+  }
+
+  &__sidebar-search-input:focus {
+    outline: none;
+  }
+
+  &__sidebar-search-input::-webkit-search-cancel-button {
+    position: relative;
+    right: 6px;
+    height: 20px;
+    width: 20px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23777'><path d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/></svg>");
+    appearance: none;
+    // background: #000;
+  }
+
+  &__sidebar {
+    min-width: 180px;
+    width: 180px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    border-right: 1px solid var(--sidebar-border-right-color);
+    background: var(--sidebar-bg-color);
+    z-index: 20;
+  }
+
+  &__title {
+    font-size: 16px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+}
+
+//--------------------------------------------------------------------------------------//
+//                                        MEDIA                                         //
+//--------------------------------------------------------------------------------------//
+
+@media (max-width: 768px) {
+
+  .sidebar-sections {
+    padding: 0;
+
+    .modal__title {
+      padding: 0 16px;
+      padding-top: 14px;
+    }
+  }
+
+  .modal {
+    &__sidebar {
+      width: 100%;
+      max-width: 100%;
+      background-color: var(--main-bg-color);
+      display: flex;
+      flex-direction: column;
+      gap: 0px;
+      border: none;
+    }
+
+    &__sidebar-search {
+      padding: 0 14px;
+    }
+
+    &__sidebar-search-input {
+      background: var(--sidebar-search-input-bg-mobile);
+      height: 45px;
+    }
+  }
+
+  .no-pan-mobile {
+    &-45{
+      padding-left: 45px !important;
+    }
+    &-30{
+      padding-left: 30px !important;
+    }
+  }
+}

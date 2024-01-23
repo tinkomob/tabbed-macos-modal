@@ -1,7 +1,7 @@
 
 <template>
     <TabbedModal 
-      :open-first-section="false" 
+      :open-first-section="true" 
       :sidebar-search="true"  
       :height="600"
       :sections-mode="true" 
@@ -9,7 +9,8 @@
       ref="modal" 
       :needFooter="true" 
       :simple="false" 
-      :pan="false" 
+      :panDesktop="false"
+      :panMobile="true" 
       title="Настройки" 
       v-if="showModal" 
       @close="showModal = false"
@@ -20,7 +21,7 @@
         <span style="background-color: red;" @click="modal.goto('gogi')">gogi</span> 
         <span style="background-color: red;" @click="modal.goto('task')">smogi</span> 
     </template> -->
-    
+
     <TabbedModalItem name="test" title="Основное">
       <a href="#" @click="modal.goto('childBABYGogi2')">-> childGogi</a>
         {{ displayImage }}
@@ -41,19 +42,16 @@
       gogi
       <a href="#" @click="modal.goto('childGogi')">-> childGogi</a>
 
-      <TabbedModalItem name="childGogi" @goback="console.log('ugdags')">
+      <TabbedModalItem name="childGogi" title="Гоги" @goback="console.log('ugdags')">
         I'M CHILD GOGI
         <button class="button" @click="displayImage = !displayImage">click mem</button>
-        <img src="/46.jpg" alt="" style="width: 100%;">
+        <img src="/defend.jpg">
         <a href="#" @click="modal.goto('childBABYGogi')">-> childBABYGogi</a>
         <a href="#" @click="modal.goto('childBABYGogi2')">-> childBABYGogi2132121</a>
         <div class="test" v-if="displayImage">
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure, laudantium asperiores in magnam earum quidem distinctio repellat perferendis perspiciatis suscipit, maxime aliquid assumenda, voluptatem est quasi nesciunt natus amet quos harum. Culpa voluptate similique ad accusamus eos exercitationem reiciendis officia? Saepe quo distinctio vel eius repellendus id ducimus possimus dignissimos.
         </div>
         <div class="beautiful-block" v-if="!displayImage" style="width: 50px; height: 50px; background-color: red;"></div>
-          <!-- Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure, laudantium asperiores in magnam earum quidem distinctio repellat perferendis perspiciatis suscipit, maxime aliquid assumenda, voluptatem est quasi nesciunt natus amet quos harum. Culpa voluptate similique ad accusamus eos exercitationem reiciendis officia? Saepe quo distinctio vel eius repellendus id ducimus possimus dignissimos.
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure, laudantium asperiores in magnam earum quidem distinctio repellat perferendis perspiciatis suscipit, maxime aliquid assumenda, voluptatem est quasi nesciunt natus amet quos harum. Culpa voluptate similique ad accusamus eos exercitationem reiciendis officia? Saepe quo distinctio vel eius repellendus id ducimus possimus dignissimos. -->
-
 
         <TabbedModalItem name="childBABYGogi" ref="childBABYGogi" @goback="console.log('ifsaf')">
           I'M childBABYGogi
@@ -66,6 +64,7 @@
           2222222222
           <template #footer>
             SDALDSALS LA SDDLSA
+            <a href="#" @click="modal.goto('sostav', true)">sostav</a>
           </template>
         </TabbedModalItem>
 
