@@ -1,5 +1,5 @@
 <template>
-  <div class="modal__sidebar" v-if="!props.simple" :class="{'sidebar-sections': props.sectionsMode}">
+  <div class="modal__sidebar" ref="sidebar" v-if="!props.simple" :class="{'sidebar-sections': props.sectionsMode, 'no-wrap': props.dynamicSidebarWidth}" :style="{width: calculatedSidebarWidth}">
     <div class="modal__title" v-if="hasTitleSlot">
       <slot name="title"></slot>
     </div>
@@ -11,33 +11,82 @@
       v-else>{{ props.sectionsMode ? (windowWidth < 768 ?  props.currentTitle : props.title) : props.title }}</div>
 
     <div class="modal__sidebar-search" v-if="props.sidebarSearch && (windowWidth > 768 || (props.sectionsMode && !props.history.length))">
-      <input type="search" v-model="searchValue" @keyup="search" name="sidebar_search" class="modal__sidebar-search-input" autocomplete="off" placeholder="Поиск...">
+      <input type="search" v-model="searchValue" @keyup="search" name="sidebar_search" class="modal__sidebar-search-input" autocomplete="off" :placeholder="props.searchPlaceholder">
     </div>
-    <SidebarContainer :sections-mode="props.sectionsMode" :history="props.history" :current="props.current" :tabs-header="props.tabsHeader" @goto="gotoTab">
+    <SidebarTabs  v-if="props.sectionsMode ? (!props.history.length || windowWidth > 768) : true" :sections-mode="props.sectionsMode"
+      :history="props.history" :current="props.current" :tabs-sidebar="props.tabsSidebar" @goto="gotoTab">
       <template v-if="hasSidebarSlot" #sidebar>
         <slot name="sidebar"></slot>
       </template>
-    </SidebarContainer>
+    </SidebarTabs>
 
   </div>
 </template>
 
 <script setup>
-import SidebarContainer from './SidebarContainer.vue';
+import SidebarTabs from './SidebarTabs.vue';
 import { useWindowWidth } from '../../composables/useWindowWidth.js';
 import { sharedProps } from '../../composables/sharedProps.js';
+import { useUtils } from '../../composables/useUtils.js';
 import { ref, useSlots, computed, inject } from 'vue'
 
 const slots = useSlots()
+const utils = useUtils()
+
+const windowWidth = useWindowWidth()
 
 const panMobile = inject('panMobile')
 
 const searchValue = ref('')
+const sidebar = ref(null)
+
+const calculatedSidebarWidth = computed(() => {
+  if (windowWidth.value > 768) {
+    let width = 180
+    if (!props.dynamicSidebarWidth) {
+      width = utils.pxToNumber(props.sidebarWidth)
+    }
+    else {
+      width = calculateSidebarWidth()
+      const maxDynamicSidebarWidth = utils.pxToNumber(props.maxDynamicSidebarWidth)
+      if (width > maxDynamicSidebarWidth) width = maxDynamicSidebarWidth
+    }
+    return utils.numberToPx(width)
+  }
+
+  return '100%'
+})
+
+function getTextWidth(text, font) {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+
+  context.font = font || getComputedStyle(document.body).font;
+
+  return context.measureText(text).width;
+}
+
+const calculateSidebarWidth = () => {
+  if (sidebar.value) {
+    const tabs = sidebar.value.querySelectorAll('.modal__tab-content')
+
+    if (tabs.length) {
+      let arrayWidth = []
+      for (const tab of Array.from(tabs)) {
+        const { font } = getComputedStyle(tab);
+        const width = getTextWidth(tab.innerText, font)
+        arrayWidth.push(width)
+      }
+      const longestValue = Math.max(...arrayWidth)
+      return longestValue + 50
+    }
+  }
+  return 180
+}
 
 const hasSidebarSlot = computed(() => !!slots.sidebar)
 const hasTitleSlot = computed(() => !!slots.title)
 
-const windowWidth = useWindowWidth()
 
 const search = () => {
   emit('search', searchValue.value)

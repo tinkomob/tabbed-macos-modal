@@ -12,21 +12,19 @@ export function useUtils() {
   }
   
   function pxToNumber(value) {
-    if (value) {
-      value = Number(value.replace('px', ''))
-
-      return value
+    if (typeof value == 'string') {
+      value = Number(value.replace(/\D/g, ''))
     }
-    return 0
+
+    return value
   }
 
   function numberToPx(value) {
-    if (value) {
+    if (typeof value == 'number' || (typeof value == 'string' && !value.includes('px'))) {
       value = value + 'px'
-
-      return value
     }
-    return '0px'
+
+    return value
   }
 
   function isIphone() {

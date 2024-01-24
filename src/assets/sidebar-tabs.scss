@@ -7,12 +7,13 @@
     transition-delay: 20ms;
     transition-property: background-color;
     cursor: pointer;
+    word-break: break-all;
     color: #5c5c5c;
     width: 100%;
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    height: 32px;
+    min-height: 32px;
     border-radius: 7px;
     padding-left: 7px;
     -webkit-tap-highlight-color: transparent
@@ -22,6 +23,14 @@
     cursor: default;
     background-color: var(--sidebar-tab-active-bg);
     color: var(--sidebar-tab-active-color);
+  }
+
+  &__tabs {
+    overflow-y: scroll;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 }
 

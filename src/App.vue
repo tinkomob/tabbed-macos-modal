@@ -3,15 +3,19 @@
     <TabbedModal 
       :open-first-section="true" 
       :sidebar-search="true"  
-      :height="600"
       :sections-mode="true" 
       :need-close-icon="true" 
+      sidebar-width="320px"
+      :dynamic-sidebar-width="true"
+      max-dynamic-sidebar-width="180"
       ref="modal" 
       :needFooter="true" 
       :simple="false" 
       :panDesktop="false"
+      :fixed-height="false"
+      search-placeholder="Search tabs..."
       :panMobile="true" 
-      title="Настройки" 
+      title="Settings" 
       v-if="showModal" 
       @close="showModal = false"
     >
@@ -21,8 +25,11 @@
         <span style="background-color: red;" @click="modal.goto('gogi')">gogi</span> 
         <span style="background-color: red;" @click="modal.goto('task')">smogi</span> 
     </template> -->
+    <!-- <template #closeIcon>
+        close button here
+    </template> -->
 
-    <TabbedModalItem name="test" title="Основное">
+    <TabbedModalItem name="test" title="Основное ads dsa d asd asad sads ads a sd">
       <a href="#" @click="modal.goto('childBABYGogi2')">-> childGogi</a>
         {{ displayImage }}
       Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus nulla at reprehenderit laudantium error ratione aperiam, impedit, enim praesentium molestias ipsum harum odio. Fugit qui aspernatur, dolore eius quod veniam, inventore porro dolorem earum laboriosam nostrum corporis quis nulla atque facere omnis, a possimus ea voluptatum mollitia consequuntur quam? Adipisci ullam quis sint nesciunt iste recusandae, rerum inventore maiores ad ut quod ea odio architecto hic ratione at exercitationem, quibusdam laboriosam error doloribus suscipit. Iusto unde asperiores omnis quod rem ea illo debitis qui incidunt, officia earum, perspiciatis illum hic optio natus ex. Deleniti modi sunt ad nam ratione aliquam provident mollitia iure, vero voluptatibus earum! Inventore, in eum quidem veniam quasi iure asperiores mollitia modi possimus soluta numquam, magni libero aperiam delectus corporis ex corrupti laudantium aspernatur. Consectetur esse quam fuga obcaecati laborum cum, adipisci molestias numquam dignissimos repudiandae laboriosam temporibus recusandae corrupti non facere nostrum, molestiae, odit amet ullam. Illo quaerat obcaecati molestias, magni praesentium enim aliquid molestiae tenetur odio a harum consequatur voluptatum libero natus incidunt nihil impedit, suscipit corrupti eum quod repellendus dolorem. Quo nesciunt quasi praesentium obcaecati veritatis assumenda id illo libero iure soluta facere, sequi magnam sunt eos deleniti optio placeat dignissimos, earum repudiandae adipisci. Officiis voluptas inventore odit dolorem placeat quas est veniam tenetur aspernatur. Aliquam adipisci consectetur accusamus architecto quasi? Repudiandae quam sed accusamus, assumenda, eius perspiciatis ullam expedita quaerat non quis aliquam, soluta nihil reprehenderit eligendi. Suscipit architecto eligendi, distinctio natus quasi ipsum porro quo iure accusantium quia? Saepe recusandae officia neque. Voluptatibus fugiat sed laboriosam saepe eaque modi accusantium ab quos fugit. Sed quam cumque, ea quas sapiente placeat in voluptates commodi excepturi exercitationem? Odit corrupti id eligendi deleniti mollitia itaque beatae fugiat corporis vitae sunt alias quibusdam minima ex consequatur blanditiis, fuga veritatis quae similique eum suscipit earum? Pariatur?
@@ -148,6 +155,27 @@
        ITEMFOOTER
       </template>
     </TabbedModalItem>
+    <!-- <TabbedModalItem name="task17">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
+    <TabbedModalItem name="task38">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem>
+    <TabbedModalItem name="task29">
+      TASK 123
+
+      <template #footer>
+       ITEMFOOTER
+      </template>
+    </TabbedModalItem> -->
     <template #mainFooter>
       MAIN FOOTER
       {{ displayImage }}
@@ -160,18 +188,12 @@
 import TabbedModal from './components/TabbedModal.vue'
 import TabbedModalItem from './components/TabbedModalItem.vue'
 
-import { ref, onBeforeUnmount, onMounted } from 'vue'
+import { ref } from 'vue'
 
 const displayImage = ref(true)
 const modal = ref(null)
 const showModal = ref(false)
 const childBABYGogi = ref(null)
-
-// const intervar = () => displayImage.value = !displayImage.value
-
-// onMounted(() => setInterval(() => intervar(), 3000))
-
-// onBeforeUnmount(() => clearInterval(intervar))
 
 </script>
 

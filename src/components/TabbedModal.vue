@@ -12,8 +12,12 @@
           v-if="!props.simple" 
           :history="currentHistory" 
           :current="current" 
-          :tabs-header="tabsHeader" 
+          :tabs-sidebar="tabsSidebar" 
           :sidebar-search="props.sidebarSearch"
+          :sidebar-width="props.sidebarWidth"
+          :dynamic-sidebar-width="props.dynamicSidebarWidth"
+          :max-dynamic-sidebar-width="props.maxDynamicSidebarWidth"
+          :search-placeholder="props.searchPlaceholder"
           @goto="gotoTab" 
           @search="search"
           :sections-mode="props.sectionsMode" 
@@ -29,7 +33,7 @@
           </template>
 
         </Sidebar>
-        <div class="modal__content" :class="{'modal__content-simple': props.simple}">
+        <div class="modal__content" :class="{'modal__content-simple': props.simple}" :style="{width: modalStyles.contentWidth}">
           <div class="modal__title" v-if="props.simple" :class="{'modal__title-simple': props.simple}">
             <template v-if="!hasTitleSlot">
               {{ props.title }}
@@ -43,11 +47,16 @@
             <slot name="mainFooter"></slot>
           </div>
         </div>
-        <div class="modal__close" @click="close()" v-if="props.needCloseIcon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 16 16" fill="none">
-            <path d="M15.6821 2.104L14.3696 0.791504L8.18213 6.979L1.99463 0.791504L0.682129 2.104L6.86963 8.2915L0.682129 14.479L1.99463 15.7915L8.18213 9.604L14.3696 15.7915L15.6821 14.479L9.49463 8.2915L15.6821 2.104Z" fill="#0A281A" />
-          </svg>
-        </div>
+        <template v-if="props.needCloseIcon">
+          <div class="modal__close" v-if="!hasCloseIconSlot" @click="close()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 16 16" fill="none">
+              <path d="M15.6821 2.104L14.3696 0.791504L8.18213 6.979L1.99463 0.791504L0.682129 2.104L6.86963 8.2915L0.682129 14.479L1.99463 15.7915L8.18213 9.604L14.3696 15.7915L15.6821 14.479L9.49463 8.2915L15.6821 2.104Z" fill="#0A281A" />
+            </svg>
+          </div>
+          <div class="custom-close-icon" v-else @click="close()">
+            <slot name="closeIcon"></slot>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -61,8 +70,10 @@ import { useHistory } from '../composables/useModalStore.js';
 import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock-upgrade';
 import Hammer from "hammerjs";
 import Sidebar from './Sidebar/Sidebar.vue';
+import { sharedProps } from '../composables/sharedProps.js';
 
 const props = defineProps({
+  ...sharedProps,
   sidebarSearch: {
     type: Boolean,
     default: false
@@ -70,10 +81,6 @@ const props = defineProps({
   simple: {
     type: Boolean,
     default: false
-  },
-  sectionsMode: {
-    type: Boolean,
-    default: true
   },
   openFirstSection: {
     type: Boolean,
@@ -89,15 +96,23 @@ const props = defineProps({
   },
   panDesktop: {
     type: Boolean,
-    default: true
+    default: false
   },
   panMobile: {
     type: Boolean,
     default: true
   },
   height: {
-    type: Number,
-    default: 500
+    type: [Number, String],
+    default: 600
+  },
+  contentWidth: {
+    type: [Number, String],
+    default: 520
+  },
+  fixedHeight: {
+    type: Boolean,
+    default: false
   },
   needCloseIcon: {
     type: Boolean,
@@ -114,6 +129,7 @@ const slots = useSlots()
 const hasSidebarSlot = computed(() => !!slots.sidebar)
 const hasTitleSlot = computed(() => !!slots.title)
 const hasFooterSlot = computed(() => !!slots.mainFooter)
+const hasCloseIconSlot = computed(() => !!slots.closeIcon)
 
 const hammer = {
     pan: null,
@@ -174,14 +190,15 @@ const modalStyles = computed(() => {
   const result = {}
   if (modal.value) {
     if (windowWidth.value > 768) {
-      bottomOffsetInit = (document.documentElement.clientHeight - modalHeight.value) / 2
+      bottomOffsetInit = (document.documentElement.clientHeight - utils.pxToNumber(modalHeight.value)) / 2
     }
     else {
       bottomOffsetInit = 0
     }
 
-    result.height = modalHeight.value + 'px'
-    result.bottom = bottomOffsetInit + 'px'
+    result.height = utils.numberToPx(modalHeight.value)
+    result.bottom = utils.numberToPx(bottomOffsetInit)
+    result.contentWidth = utils.numberToPx(props.contentWidth)
   }
   else {
     result.bottom = '0px'
@@ -241,7 +258,7 @@ const setTabsHeight = () => {
 const setContentHeightDesktop = () => {
   const staticHeight = heightStaticElements(true)
   const innerContent = modal.value.querySelector('.inner-content')
-  if (innerContent) innerContent.style.height = modalHeight.value - staticHeight + 'px'
+  if (innerContent) innerContent.style.height = utils.numberToPx(modalHeight.value - staticHeight)
 
   if (!props.simple) setTabsHeight()
 }
@@ -250,7 +267,11 @@ const setModalHeight = async () => {
   const staticHeight = heightStaticElements()
   const innerContent = modal.value.querySelector('.inner-content')
 
-  // imagesLoaded решает проблему с динамическим расчётом высоты модалки если есть фотки, т.к. фотки не сразу грузятся, а до того момента высота не определена (как я понял) 
+  /* 
+    imagesLoaded solves the problem with dynamically calculating the height of the modal if there are photos, 
+    because the photos are not loaded immediately, 
+    and until then the height is not determined (as I understand)
+  */
   await utils.imagesIsLoaded(innerContent)
 
   if (innerContent && innerContent.style.height && innerContent.getAttribute('style')) {
@@ -259,14 +280,18 @@ const setModalHeight = async () => {
   const childContentHeight = innerContent?.scrollHeight
   let h = childContentHeight + staticHeight
 
+  if (props.fixedHeight) h = utils.pxToNumber(props.height)
+
   if (h >= document.documentElement.clientHeight) h = document.documentElement.clientHeight - 60 - (utils.isIphone() ? 30 : 0)
+
   modalHeight.value = h
-  if (innerContent) innerContent.style.height = Math.abs(modalHeight.value - staticHeight) + 'px'
+
+  if (innerContent) innerContent.style.height = utils.numberToPx(Math.abs(modalHeight.value - staticHeight))
   if (props.sectionsMode) {
     const heightStatic = heightStaticSectionsMode()
     const sectionTabs = modal.value.querySelector('.sections-mode')
     if (sectionTabs) {
-      sectionTabs.style.height = Math.abs(modalHeight.value - heightStatic) + 'px'
+      sectionTabs.style.height = utils.numberToPx(Math.abs(modalHeight.value - heightStatic))
 
       if (!currentHistory.length && windowWidth.value < 768) {
         if (!initTabsHeight.value) initTabsHeight.value = sectionTabs.style.height
@@ -343,7 +368,7 @@ const move = (event, type) => {
       bottomOffset.value = 0;
       close()
     } else {
-      modal.value.style.bottom = bottomOffsetInit + 'px';
+      modal.value.style.bottom = utils.numberToPx(bottomOffsetInit);
     }
   }
 }
@@ -427,7 +452,7 @@ const currentTitle = computed(() => {
   
   if (props.title) return props.title
 
-  return 'Окно'
+  return 'Window'
 })
 
 const hasChildFooter = computed(() => {
@@ -452,7 +477,7 @@ const search = (value) => {
   searchValue.value = value
 }
 
-const tabsHeader = computed(() => {
+const tabsSidebar = computed(() => {
   let tabs = getOnlyComponentsInSlot(slots.default()).map(item => {
     return {
       name: item.props.name,
@@ -501,7 +526,7 @@ const render = () => {
     history.setCurrentTitle(comp.props.title, modalId)
   }
 
-  // key нужен чтобы контент таба переписывался корректно при переключении в навигации
+  // key is needed so that the tab content is rewritten correctly when switching in navigation
   return h('div', {key: comp.key}, comp)
 };
 

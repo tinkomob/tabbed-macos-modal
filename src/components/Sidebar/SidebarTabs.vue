@@ -1,9 +1,11 @@
 <template>
   <div class="modal__tabs" :class="{ 'sections-mode': props.sectionsMode, 'h-scrollable': !props.sectionsMode }">
     <template v-if="!hasSidebarSlot">
-      <div class="modal__tab-head-item" v-for="(item, index) in tabsHeader" :key="index" @click="goto(item.name, true)"
+      <div class="modal__tab-head-item" v-for="(item, index) in tabsSidebar" :key="index" @click="goto(item.name, true)"
         :class="{ 'modal__tab-head-item--active': windowWidth > 768 ? tabIsActive(item.name) : !props.sectionsMode ? tabIsActive(item.name) : false }">
-        {{ getTabTitle(item) }}
+        <span class="modal__tab-content">
+          {{ getTabTitle(item) }}
+        </span>
         <svg xmlns="http://www.w3.org/2000/svg" class="sections-mode__section-arrow" fill="#000000" width="16px"
           height="16px" viewBox="0 0 24 24" v-if="props.sectionsMode && windowWidth < 768">
           <g data-name="Layer 2">

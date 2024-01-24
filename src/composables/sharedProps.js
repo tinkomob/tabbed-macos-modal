@@ -7,7 +7,7 @@ export const sharedProps = {
     type: Object,
     default: {}
   },
-  tabsHeader: {
+  tabsSidebar: {
     type: Array,
     default: []
   },
@@ -15,4 +15,20 @@ export const sharedProps = {
     type: Object,
     default: null
   },
+  sidebarWidth: {
+    type: [Number, String],
+    default: 180
+  },
+  dynamicSidebarWidth: {
+    type: Boolean,
+    default: false
+  },
+  maxDynamicSidebarWidth: {
+    type: [Number, String],
+    default: 320
+  },
+  searchPlaceholder: {
+    type: String,
+    default: 'Search...'
+  }
 }
