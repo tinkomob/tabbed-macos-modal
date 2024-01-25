@@ -7,19 +7,30 @@ Tabbed MacOS-Like Modal is a Vue 3 plugin for creating modals like MacOS Setting
 Use the npm to install
 
 ```bash
-npm i @tabbed-macos-modal
-```
-Register Globally
-
-```javascript
-console.log('import')
+npm i tabbed-macos-modal
 ```
 
-Register Locally 
+Register globally
 
 ```javascript
-import TabbedModal from '@tabbed-macos-modal/TabbedModal.vue'
-import TabbedModalItem from '@tabbed-macos-modal/TabbedModalItem.vue'
+
+import { TabbedModal, TabbedModalItem } from 'tabbed-macos-modal'
+import 'tabbed-macos-modal/dist/style.css'
+
+const app = createApp(...)
+
+app.component('TabbedModal', TabbedModal)
+app.component('TabbedModalItem', TabbedModalItem)
+
+```
+
+Or register locally 
+
+```javascript
+
+import { TabbedModal, TabbedModalItem } from 'tabbed-macos-modal'
+import 'tabbed-macos-modal/dist/style.css'
+
 ```
 
 ## Usage
