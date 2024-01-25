@@ -150,9 +150,9 @@ import 'tabbed-macos-modal/dist/style.css'
 
 | Prop      | Type   | Description                                                                                                                         | Default     |
 | --------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `name` \*   | string | Name for component. This prop is used for navigation between props (see example).                                                   | \* `required` |
-| `title`     | string | Will be displayed in header content                                                                                                 | `null`        |
-| `headTitle` | string | title for content head. If set together with `title`, then `title` will be displayed in sidebar and `headTitle` will be in header content | `null`        |
+| `name` \*   | `string` | Name for component. This prop is used for navigation between props (see example).                                                   | \* `required` |
+| `title`     | `string` | Will be displayed in header content                                                                                                 | `null`        |
+| `headTitle` | `string` | title for content head. If set together with `title`, then `title` will be displayed in sidebar and `headTitle` will be in header content | `null`        |
 
 ## Contributing
 
