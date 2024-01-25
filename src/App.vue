@@ -25,7 +25,7 @@
       </template>
     </TabbedModalItem> 
 
-    <TabbedModalItem name="products" title="Products 12213">
+    <TabbedModalItem name="products" title="Products">
       <template #header>
         <span class="custom-header">
           my custom header 👽👽👽
@@ -71,7 +71,7 @@
       </TabbedModalItem>
 
     </TabbedModalItem>
-    <TabbedModalItem name="composition" title="Composition Title" head-title="testaaaa3">
+    <TabbedModalItem name="composition" title="Composition" head-title="test head title">
       Lorem, ipsum dolor sit amet consectetur adipisicing elit. Vel praesentium ea eius quo molestiae corporis quidem dicta id atque. Ea quia at illo, doloremque sit consectetur quasi tempore a porro.
       <template #footer>
        SOSTAV FOOTER
