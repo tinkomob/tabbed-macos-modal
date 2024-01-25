@@ -14,13 +14,13 @@ Register globally
 
 ```javascript
 
-import { TabbedModal, TabbedModalItem } from 'tabbed-macos-modal'
+import TabbedModal from 'tabbed-macos-modal'
 import 'tabbed-macos-modal/dist/style.css'
 
 const app = createApp(...)
 
-app.component('TabbedModal', TabbedModal)
-app.component('TabbedModalItem', TabbedModalItem)
+app.use(TabbedModal)
+
 
 ```
 
