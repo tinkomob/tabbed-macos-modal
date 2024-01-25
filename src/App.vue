@@ -4,8 +4,6 @@
       ref="modal" 
       title="Settings" 
       sidebar-search
-      :sections-mode="false"
-      :open-first-section="true"
       v-if="showModal" 
       @close="showModal = false"
     >
@@ -79,10 +77,9 @@
        SOSTAV FOOTER
       </template>
     </TabbedModalItem>
-    <!-- <template #mainFooter>
+    <template #mainFooter>
       MAIN FOOTER
-      {{ displayImage }}
-    </template> -->
+    </template>
   </TabbedModal>
   <button class="show-modal" @click="showModal=true" v-if="!showModal">SHOW</button>
 </template>
