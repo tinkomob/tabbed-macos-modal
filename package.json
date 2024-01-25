@@ -1,7 +1,31 @@
 {
   "name": "tabbed-macos-modal",
-  "private": true,
+  "files": ["dist"],
+  "main": "./dist/tabbed-macos-modal.umd.cjs",
+  "module": "./dist/tabbed-macos-modal.js",
+  "exports": {
+    ".": {
+      "import": "./dist/tabbed-macos-modal.js",
+      "require": "./dist/tabbed-macos-modal.umd.cjs"
+    },
+    "./dist/style.css": {
+      "import": "./dist/style.css",
+      "require": "./dist/style.css"
+    }
+  },
+  "keywords": [
+    "modal",
+    "tabbed",
+    "vue3",
+    "vue",
+    "vuejs"
+  ],
+  "private": false,
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tinkomob/tabbed-macos-modal.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",

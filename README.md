@@ -9,23 +9,25 @@ Use the npm to install
 ```bash
 npm i @tabbed-macos-modal
 ```
+Register Globally
+
+```javascript
+console.log('import')
+```
+
+Register Locally 
+
+```javascript
+import TabbedModal from '@tabbed-macos-modal/TabbedModal.vue'
+import TabbedModalItem from '@tabbed-macos-modal/TabbedModalItem.vue'
+```
 
 ## Usage
 
-```javascript
-import foobar
-
-# returns 'words'
-foobar.pluralize('word')
-
-# returns 'geese'
-foobar.pluralize('goose')
-
-# returns 'phenomenon'
-foobar.singularize('phenomena')
+```html
 ```
 
-## TabbedModal Props (See example in App.vue)
+## TabbedModal Props (See example in src/App.vue)
 | Prop                   | Type           | Description                                                                                                                        | Default       |
 | ---------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------- |
 | title                  | string         | title for modal (top left corner)                                                                                                  | Default Title |
@@ -45,13 +47,14 @@ foobar.singularize('phenomena')
 | fixedHeight            | boolean        | If true, then "height" prop will be set as max height for modal and on mobile dynamic height calculation will be disabled          | false         |
 | contentWidth           | Number, String | Sets content for modalItem content. On mobile content width is set to 100%                                                         | 520           |
 
-## TabbedModalItem Props (See example in App.vue)
+## TabbedModalItem Props (See example in src/App.vue)
 
 | Prop      | Type   | Description                                                                                                                         | Default     |
 | --------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | name \*   | string | Name for component. This prop is used for navigation between props (see example).                                                   | \* required |
 | title     | string | Will be displayed in header content                                                                                                 | null        |
 | headTitle | string | title for content head. If set together with title, then title will be displayed in sidebar and headTitle will be in header content | null        |
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first
