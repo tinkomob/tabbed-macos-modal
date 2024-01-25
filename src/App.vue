@@ -84,8 +84,6 @@
 </template>
 
 <script setup>
-import TabbedModal from './components/TabbedModal.vue'
-import TabbedModalItem from './components/TabbedModalItem.vue'
 
 import { ref } from 'vue'
 

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import { format, resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -8,10 +8,10 @@ export default defineConfig({
   build: {
     lib: {
       // Could also be a dictionary or array of multiple entry points
-      entry: resolve(__dirname, 'src/index.js'),
+      entry: resolve(__dirname, 'lib/index.js'),
       name: 'tabbed-macos-modal',
       // the proper extensions will be added
-      fileName: 'tabbed-macos-modal',
+      fileName: 'tabbed-macos-modal'
     },
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
