@@ -3,7 +3,8 @@ import vue from '@vitejs/plugin-vue'
 import { format, resolve } from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  publicDir: command === "serve" ? "public" : false,
   plugins: [vue()],
   build: {
     lib: {
@@ -26,4 +27,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))
