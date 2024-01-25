@@ -84,7 +84,7 @@ const props = defineProps({
   },
   openFirstSection: {
     type: Boolean,
-    default: false
+    default: true
   },
   needFooter: {
     type: Boolean,
@@ -213,7 +213,7 @@ const heightStaticElements = (desktop = false) => {
   const modalParentDiv = innerContent?.closest('.modal__content')
   if (modalParentDiv) {
     const modalDiv = innerContent.closest('.modal')
-    const footerHeight = modalParentDiv.querySelector('.modal__footer')?.getBoundingClientRect()?.height || 0
+    const footerHeight = modalParentDiv.querySelector('.modal__footer')?.getBoundingClientRect()?.height || (currentHistory.value.length ? 35 : 0)
     const sidebarHeight = modalDiv.querySelector('.modal__sidebar')?.getBoundingClientRect()?.height || 0
     const panHeight = modalDiv.querySelector('.modal__pan')?.getBoundingClientRect()?.height || 0
     const headerHeight = modalParentDiv.querySelector('.modal__child-item-header')?.getBoundingClientRect()?.height || 0
@@ -293,7 +293,7 @@ const setModalHeight = async () => {
     if (sectionTabs) {
       sectionTabs.style.height = utils.numberToPx(Math.abs(modalHeight.value - heightStatic))
 
-      if (!currentHistory.length && windowWidth.value < 768) {
+      if (!currentHistory.value.length && windowWidth.value < 768) {
         if (!initTabsHeight.value) initTabsHeight.value = sectionTabs.style.height
         else sectionTabs.style.height = initTabsHeight.value
       }
@@ -522,8 +522,15 @@ const render = () => {
     ])
   }
   let comp = findComp(defaultSlots)
-  if (comp && comp.props.title) { 
-    history.setCurrentTitle(comp.props.title, modalId)
+  if (comp && comp.props) { 
+    let title = null
+
+    if (comp.props.title) title = comp.props.title
+    if (comp.props.headTitle) title = comp.props.headTitle
+    if (comp.props['head-title']) title = comp.props['head-title']
+
+    if (title) history.setCurrentTitle(title, modalId)
+    // if (comp.props.exposed.slotsHeader?.length) 
   }
 
   // key is needed so that the tab content is rewritten correctly when switching in navigation

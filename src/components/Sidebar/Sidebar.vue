@@ -8,7 +8,13 @@
       'no-pan-mobile-45': !panMobile && (props.sectionsMode ? props.history.length : false),
       'no-pan-mobile-30': !panMobile && (props.sectionsMode ? false : props.history.length > 1)
       }" 
-      v-else>{{ props.sectionsMode ? (windowWidth < 768 ?  props.currentTitle : props.title) : props.title }}</div>
+      v-else>
+
+      <div :id="'modal__custom-header-' + modalId"></div>
+      <template v-if="!hasCustomHeader">
+          {{ props.sectionsMode ? (windowWidth < 768 ?  props.currentTitle : props.title) : props.title }}
+      </template>
+    </div>
 
     <div class="modal__sidebar-search" v-if="props.sidebarSearch && (windowWidth > 768 || (props.sectionsMode && !props.history.length))">
       <input type="search" v-model="searchValue" @keyup="search" name="sidebar_search" class="modal__sidebar-search-input" autocomplete="off" :placeholder="props.searchPlaceholder">
@@ -29,6 +35,11 @@ import { useWindowWidth } from '../../composables/useWindowWidth.js';
 import { sharedProps } from '../../composables/sharedProps.js';
 import { useUtils } from '../../composables/useUtils.js';
 import { ref, useSlots, computed, inject } from 'vue'
+import { useHistory } from '../../composables/useModalStore.js';
+
+const modalId = inject('modalId')
+
+const history = useHistory(modalId)
 
 const slots = useSlots()
 const utils = useUtils()
@@ -36,6 +47,8 @@ const utils = useUtils()
 const windowWidth = useWindowWidth()
 
 const panMobile = inject('panMobile')
+
+const hasCustomHeader = computed(() => history.hasCustomHeader(modalId))
 
 const searchValue = ref('')
 const sidebar = ref(null)

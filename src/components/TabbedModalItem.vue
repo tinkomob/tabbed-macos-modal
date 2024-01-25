@@ -1,12 +1,14 @@
 <template>
   <div class="modal__child-item-header">
-    <div class="modal__go-back" :class="{'go-back__no-mobile-pan': !panMobile}" v-if="isChildItem" @click="goBack()">
+    <div class="modal__go-back" :class="{'modal__go-back--no-mobile-pan': !panMobile}" v-if="isChildItem" @click="goBack()">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="black"/>
       </svg>
     </div>
     <template v-if="hasHeaderSlot">
-      <slot name="header"></slot>
+      <teleport :to="'#modal__custom-header-' + modalId" :disabled="windowWidth > 768" v-if="isMounted">
+        <slot name="header"></slot>
+      </teleport>
     </template>
     <template v-else>
       <span class="modal__child-item-header-title">{{ getHeadTitle }}</span>
@@ -37,11 +39,14 @@
   const panMobile = inject('panMobile')
   const modalId = inject('modalId')
   const isSectionsMode = inject('isSectionsMode')
-  
+
+  const isMounted = ref(false)
+
   const history = useHistory(modalId)
 
   history.setChildFooter(hasFooterSlot.value, modalId)
-
+  history.setCustomHeader(hasHeaderSlot.value && windowWidth.value < 768, modalId)
+  
   const props = defineProps({
     name: String,
     title: String,
@@ -101,6 +106,7 @@
   }
 
   onMounted(() => {
+    isMounted.value = true
     if (windowWidth.value < 768) {
       document.addEventListener('touchstart', touchstart)
       document.addEventListener('touchend', touchend)
@@ -113,10 +119,10 @@
       document.removeEventListener('touchend', touchend)
     }
   })
-
   defineExpose({
     goBack,
-    defaultSlots: slots.default()
+    defaultSlots: slots.default(),
+    slotHeader: slots.header && typeof slots.header == 'function' ? slots.header() : []
   })
 </script>
 

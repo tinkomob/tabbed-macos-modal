@@ -9,7 +9,8 @@ export function useHistory(modalId) {
     history.value.push({
       modalId: modalId,
       history: [],
-      hasChildFooter: false
+      hasChildFooter: false,
+      hasCustomHeader: false,
     })
   }
 
@@ -61,6 +62,21 @@ export function useHistory(modalId) {
     }
   }
 
+  function hasCustomHeader(key) {
+    const idx = history.value.findIndex(item => item.modalId == key)
+    if (idx > -1) {
+      return history.value[idx].hasCustomHeader || false
+    }
+
+  }
+
+  function setCustomHeader(value, key) {
+    const idx = history.value.findIndex(item => item.modalId == key)
+    if (idx > -1) {
+      history.value[idx].hasCustomHeader = value
+    }
+  }
+
   return {
     addItem,
     clear,
@@ -68,6 +84,8 @@ export function useHistory(modalId) {
     goBack,
     setCurrentTitle,
     hasChildFooter,
-    setChildFooter
+    setChildFooter,
+    setCustomHeader,
+    hasCustomHeader,
   }
 }
