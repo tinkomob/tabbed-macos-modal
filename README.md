@@ -7,8 +7,8 @@ Tabbed MacOS-Like Modal is a Vue 3 plugin for creating modals like MacOS Setting
 <details>
   <summary>Mobile version</summary>
 
-  ![tabbed macos-like modal mobile item opened](https://i.ibb.co/YXCT19H/mobile-screenshow-item-opened.png)
-  ![tabbed macos-like modal menu](https://i.ibb.co/nPrSfbY/mobile-screenshot-menu.png)
+  <img alt="tabbed macos-like modal mobile item opened" src="https://i.ibb.co/YXCT19H/mobile-screenshow-item-opened.png" width="200">
+  <img alt="tabbed macos-like modal menu" src="https://i.ibb.co/nPrSfbY/mobile-screenshot-menu.png" width="200">
 </details>
 
 ## Installation
