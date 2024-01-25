@@ -13,7 +13,7 @@ export function useUtils() {
   
   function pxToNumber(value) {
     if (typeof value == 'string') {
-      value = Number(value.replace(/\D/g, ''))
+      value = Number(value.replace('px', ''))
     }
 
     return value

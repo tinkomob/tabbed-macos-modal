@@ -1,5 +1,5 @@
 <template>
-  <div class="header">
+  <div class="modal__child-item-header">
     <div class="go-back" :class="{'go-back__no-mobile-pan': !panMobile}" v-if="isChildItem" @click="goBack()">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="black"/>
@@ -9,10 +9,10 @@
       <slot name="header"></slot>
     </template>
     <template v-else>
-      <span class="header__title">{{ getHeadTitle }}</span>
+      <span class="modal__child-item-header-title">{{ getHeadTitle }}</span>
     </template>
   </div>
-  <div class="content" ref="contentItem">
+  <div class="modal__child-item-content" ref="contentItem">
     <render />
   </div>
   <div class="footer modal__footer" v-if="hasFooterSlot && needFooter">
@@ -70,7 +70,7 @@
   
   const render = () => {
     let toRender = slots.default().filter(item => item.type.__name != 'TabbedModalItem')
-    return h('div', {class: 'inner-content' }, toRender)
+    return h('div', {class: 'modal__inner-content' }, toRender)
   }
   
 

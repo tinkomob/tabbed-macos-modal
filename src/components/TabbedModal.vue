@@ -4,8 +4,8 @@
     @touchstart="clickOnBottomSheet">
     <div class="modal-item__backdrop" />
     <div class="modal" ref="modal" :style="modalStyles" :class="{moving: moving}">
-      <div ref="pan" class="pan" v-if="(props.panDesktop && windowWidth > 768) || (props.panMobile && windowWidth < 768)">
-          <div class="pan__bar"></div>
+      <div ref="pan" class="modal__pan" v-if="(props.panDesktop && windowWidth > 768) || (props.panMobile && windowWidth < 768)">
+          <div class="modal__pan-bar"></div>
       </div>
       <div class="modal__container">
         <Sidebar 
@@ -208,15 +208,15 @@ const modalStyles = computed(() => {
 })
 
 const heightStaticElements = (desktop = false) => {
-  const innerContent = modal.value.querySelector('.inner-content')
+  const innerContent = modal.value.querySelector('.modal__inner-content')
 
   const modalParentDiv = innerContent?.closest('.modal__content')
   if (modalParentDiv) {
     const modalDiv = innerContent.closest('.modal')
     const footerHeight = modalParentDiv.querySelector('.modal__footer')?.getBoundingClientRect()?.height || 0
     const sidebarHeight = modalDiv.querySelector('.modal__sidebar')?.getBoundingClientRect()?.height || 0
-    const panHeight = modalDiv.querySelector('.pan')?.getBoundingClientRect()?.height || 0
-    const headerHeight = modalParentDiv.querySelector('.header')?.getBoundingClientRect()?.height || 0
+    const panHeight = modalDiv.querySelector('.modal__pan')?.getBoundingClientRect()?.height || 0
+    const headerHeight = modalParentDiv.querySelector('.modal__child-item-header')?.getBoundingClientRect()?.height || 0
 
     let sumH = headerHeight + footerHeight + panHeight
 
@@ -226,7 +226,7 @@ const heightStaticElements = (desktop = false) => {
     }
     if (!desktop) sumH += sidebarHeight 
     if (desktop) {
-      const marginTop = getComputedStyle(modalParentDiv.querySelector('.content'))?.marginTop
+      const marginTop = getComputedStyle(modalParentDiv.querySelector('.modal__child-item-content'))?.marginTop
       sumH += utils.pxToNumber(marginTop)
     }
 
@@ -257,7 +257,7 @@ const setTabsHeight = () => {
 
 const setContentHeightDesktop = () => {
   const staticHeight = heightStaticElements(true)
-  const innerContent = modal.value.querySelector('.inner-content')
+  const innerContent = modal.value.querySelector('.modal__inner-content')
   if (innerContent) innerContent.style.height = utils.numberToPx(modalHeight.value - staticHeight)
 
   if (!props.simple) setTabsHeight()
@@ -265,7 +265,7 @@ const setContentHeightDesktop = () => {
 
 const setModalHeight = async () => {
   const staticHeight = heightStaticElements()
-  const innerContent = modal.value.querySelector('.inner-content')
+  const innerContent = modal.value.querySelector('.modal__inner-content')
 
   /* 
     imagesLoaded solves the problem with dynamically calculating the height of the modal if there are photos, 
@@ -363,7 +363,7 @@ const move = (event, type) => {
   if (event.isFinal) {
     contentScroll = modal.value.scrollTop;
     moving.value = false;
-    
+    console.log(utils.pxToNumber(modal.value.style.bottom))
     if (utils.pxToNumber(modal.value.style.bottom) < bottomOffsetInit - 60) {
       bottomOffset.value = 0;
       close()
@@ -508,17 +508,17 @@ const defaultSlots = slots.default()
 const render = () => {
   
   if (!props.simple && props.sectionsMode && !currentHistory.value.length && windowWidth.value < 768) {
-    return h('div', {class: 'content' }, [h('div', {class: 'inner-content' }, '' )])
+    return h('div', {class: 'modal__child-item-content' }, [h('div', {class: 'modal__inner-content' }, '' )])
   }
 
   if (props.simple) {
-    return h('div', {class: 'content' }, [h('div', {class: 'inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
+    return h('div', {class: 'modal__child-item-content' }, [h('div', {class: 'modal__inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
   }
 
   if (!slots.default().filter(item => item.type.__name == 'TabbedModalItem').length) {
     return h('div', {}, [
-      h('div', { class: 'header' }, [h('span', { class: 'header__title' }, '')]),
-      h('div', { class: 'content' }, [h('div', { class: 'inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
+      h('div', { class: 'modal__child-item-header' }, [h('span', { class: 'header__title' }, '')]),
+      h('div', { class: 'modal__child-item-content' }, [h('div', { class: 'modal__inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
     ])
   }
   let comp = findComp(defaultSlots)
