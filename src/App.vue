@@ -75,10 +75,10 @@
        SOSTAV FOOTER
       </template>
     </TabbedModalItem>
-    <template #mainFooter>
+    <!-- <template #mainFooter>
       MAIN FOOTER
       {{ displayImage }}
-    </template>
+    </template> -->
   </TabbedModal>
   <button class="show-modal" @click="showModal=true" v-if="!showModal">SHOW</button>
 </template>

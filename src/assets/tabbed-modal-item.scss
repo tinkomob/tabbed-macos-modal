@@ -1,4 +1,4 @@
-.go-back {
+.modal__go-back {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,7 +16,7 @@
 //--------------------------------------------------------------------------------------//
 
 @media (max-width: 768px) {
-  .go-back {
+  .modal__go-back {
     top: -28px;
     z-index: 999;
     position: absolute;
