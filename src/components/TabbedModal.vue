@@ -363,7 +363,6 @@ const move = (event, type) => {
   if (event.isFinal) {
     contentScroll = modal.value.scrollTop;
     moving.value = false;
-    console.log(utils.pxToNumber(modal.value.style.bottom))
     if (utils.pxToNumber(modal.value.style.bottom) < bottomOffsetInit - 60) {
       bottomOffset.value = 0;
       close()
@@ -504,7 +503,6 @@ const tabsSidebar = computed(() => {
 })
 
 
-const defaultSlots = slots.default()
 const render = () => {
   
   if (!props.simple && props.sectionsMode && !currentHistory.value.length && windowWidth.value < 768) {
@@ -521,7 +519,7 @@ const render = () => {
       h('div', { class: 'modal__child-item-content' }, [h('div', { class: 'modal__inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
     ])
   }
-  let comp = findComp(defaultSlots)
+  let comp = findComp(slots.default())
   if (comp && comp.props) { 
     let title = null
 
@@ -530,7 +528,6 @@ const render = () => {
     if (comp.props['head-title']) title = comp.props['head-title']
 
     if (title) history.setCurrentTitle(title, modalId)
-    // if (comp.props.exposed.slotsHeader?.length) 
   }
 
   // key is needed so that the tab content is rewritten correctly when switching in navigation
