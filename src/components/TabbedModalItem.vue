@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-  import { onMounted, useSlots, h, ref, inject, computed, onBeforeUnmount } from 'vue'
+  import { onMounted, useSlots, h, ref, inject, computed, onBeforeUnmount, nextTick } from 'vue'
 
   const emit = defineEmits(['goback'])
 
@@ -72,8 +72,11 @@
     return 'Tab title'
   })
 
-  
   const render = () => {
+    nextTick(() => {
+      history.rerenderSlotContent(modalId)
+    })
+
     let toRender = slots.default().filter(item => item.type.__name != 'TabbedModalItem')
     return h('div', {class: 'modal__inner-content' }, toRender)
   }
@@ -119,6 +122,7 @@
       document.removeEventListener('touchend', touchend)
     }
   })
+
   defineExpose({
     goBack,
     defaultSlots: slots.default(),

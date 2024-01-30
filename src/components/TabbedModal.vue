@@ -1,6 +1,6 @@
 
 <template>
-  <div class="modal-item" :class="{opened: modalOpened, closed: modalOpened === false, moving: moving}" @mousedown="clickOnBottomSheet" 
+  <div class="tabbed-modal modal-item" :class="{opened: modalOpened, closed: modalOpened === false, moving: moving}" @mousedown="clickOnBottomSheet" 
     @touchstart="clickOnBottomSheet">
     <div class="modal-item__backdrop" />
     <div class="modal" ref="modal" :style="modalStyles" :class="{moving: moving}">
@@ -42,7 +42,7 @@
               <slot name="title"></slot>
             </template>
           </div>
-          <render/>
+          <render :key="renderKey"/>
           <div class="modal__footer" v-if="hasFooterSlot && !hasChildFooter && props.needFooter">
             <slot name="mainFooter"></slot>
           </div>
@@ -164,6 +164,11 @@ const init = async () => {
   open()
 }
 
+//renderKey is needed to trigger onUpdated hook, when content of slot is changed reactively
+const renderKey = computed(() => {
+  history.history.value.find(item => item.modalId == modalId)?.renderKey
+})
+
 onUpdated(() => {
   callAfterRender()
 })
@@ -213,7 +218,7 @@ const heightStaticElements = (desktop = false) => {
   const modalParentDiv = innerContent?.closest('.modal__content')
   if (modalParentDiv) {
     const modalDiv = innerContent.closest('.modal')
-    const footerHeight = modalParentDiv.querySelector('.modal__footer')?.getBoundingClientRect()?.height || (currentHistory.value.length ? 35 : 0)
+    const footerHeight = modalParentDiv.querySelector('.modal__footer')?.getBoundingClientRect()?.height + (currentHistory.value.length ? 15 : 1) || (currentHistory.value.length ? 35 : 0)
     const sidebarHeight = modalDiv.querySelector('.modal__sidebar')?.getBoundingClientRect()?.height || 0
     const panHeight = modalDiv.querySelector('.modal__pan')?.getBoundingClientRect()?.height || 0
     const headerHeight = modalParentDiv.querySelector('.modal__child-item-header')?.getBoundingClientRect()?.height || 0

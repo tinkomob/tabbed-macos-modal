@@ -22,7 +22,7 @@
   &__tab-head-item--active {
     cursor: default;
     background-color: var(--sidebar-tab-active-bg);
-    color: var(--sidebar-tab-active-color);
+    color: var(--tm-sidebar-tab-active-color);
   }
 
   &__tabs {
@@ -110,7 +110,7 @@
 
     &__tab-head-item--active {
       background-color: var(--sidebar-tab-active-bg);
-      color: var(--sidebar-tab-active-color);
+      color: var(--tm-sidebar-tab-active-color);
     }
 
     &__tab-head-item {

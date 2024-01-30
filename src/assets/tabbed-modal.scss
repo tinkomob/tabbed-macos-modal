@@ -10,7 +10,7 @@
   transform: translate(-50%, 0);
   transition: bottom 0.3s ease;
   transition: height 0.3s ease;
-  background-color: var(--main-bg-color);
+  background-color: var(--tm-main-bg-color);
 
   &__container {
     position: relative;
@@ -25,7 +25,7 @@
   }
 
   &__content {
-    background-color: var(--main-bg-color);
+    background-color: var(--tm-main-bg-color);
     max-width: 100%;
     width: 520px;
     height: 100%;
@@ -61,7 +61,7 @@
   }
 
   &__close:hover {
-    background-color: var(--close-button-bg-hover-color);
+    background-color: var(--tm-close-button-bg-hover-color);
 
     svg path {
       fill: #fff;
@@ -85,7 +85,8 @@
   justify-content: flex-end;
   gap: 9px;
   z-index: 10;
-  background-color: var(--main-bg-color);
+  box-shadow: 0px -1px 1px rgba(100, 100, 111, 0.2);
+  background-color: var(--tm-main-bg-color);
 }
 
 .modal__pan {
@@ -93,7 +94,7 @@
   padding-top: 15px;
   cursor: grab;
   height: 38px;
-  background-color: var(--main-bg-color);
+  background-color: var(--tm-main-bg-color);
 
   &-bar {
     display: block;
@@ -127,7 +128,7 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: var(--content-scrollbar-color);
+    background: var(--tm-content-scrollbar-color);
     border-radius: 10px;
   }
 }

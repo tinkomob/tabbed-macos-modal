@@ -7,9 +7,9 @@
     transition-delay: 20ms;
     transition-property: background-color;
     // cursor: pointer;
-    color: var(--sidebar-search-input-color);
+    color: var(--tm-sidebar-search-input-color);
     width: 100%;
-    background-color: var(--sidebar-search-input-bg);
+    background-color: var(--tm-sidebar-search-input-bg);
     display: flex;
     justify-content: flex-start;
     border: none;
@@ -47,8 +47,8 @@
     padding-right: 16px;
     padding-top: 14px;
     padding-bottom: 14px;
-    border-right: 1px solid var(--sidebar-border-right-color);
-    background: var(--sidebar-bg-color);
+    border-right: 1px solid var(--tm-sidebar-border-right-color);
+    background: var(--tm-sidebar-bg-color);
     z-index: 20;
   }
 
@@ -90,7 +90,7 @@
     &__sidebar {
       width: 100%;
       max-width: 100%;
-      background-color: var(--main-bg-color);
+      background-color: var(--tm-main-bg-color);
       display: flex;
       flex-direction: column;
       gap: 0px;
@@ -102,7 +102,7 @@
     }
 
     &__sidebar-search-input {
-      background: var(--sidebar-search-input-bg-mobile);
+      background: var(--tm-sidebar-search-input-bg-mobile);
       height: 45px;
     }
   }
