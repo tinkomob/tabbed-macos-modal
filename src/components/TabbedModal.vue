@@ -67,7 +67,7 @@ import { ref, useSlots, computed, h, provide, nextTick, onBeforeUnmount, onUpdat
 import { useUtils } from '../composables/useUtils.js';
 import { useWindowWidth } from '../composables/useWindowWidth.js';
 import { useHistory } from '../composables/useModalStore.js';
-import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock-upgrade';
+// import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock-upgrade';
 import Hammer from "hammerjs";
 import Sidebar from './Sidebar/Sidebar.vue';
 import { sharedProps } from '../composables/sharedProps.js';
@@ -381,8 +381,8 @@ const enableOverflow = async () => {
   await nextTick()
   let openedModalsList = document.getElementsByClassName("modal-item opened");
   if (!openedModalsList.length) {
-    let body = document.querySelector('.app-body')
-    enableBodyScroll(body);
+    // let body = document.querySelector('.app-body')
+    // enableBodyScroll(body);
     document.documentElement.style.overflow = 'auto'
     document.documentElement.style.overflowY = 'auto'
 
@@ -395,8 +395,8 @@ const enableOverflow = async () => {
 const disableOverflow = () => {
   let openedModalsList = document.getElementsByClassName("modal-item opened");
   if (!openedModalsList.length) {
-    let body = document.querySelector('.app-body')
-    disableBodyScroll(body, { allowTouchMove: () => true });
+    // let body = document.querySelector('.app-body')
+    // disableBodyScroll(body, { allowTouchMove: () => true });
     document.documentElement.style.overflow = 'hidden'
     document.documentElement.style.overflowY = 'hidden'
     body.style.overflow = 'hidden'

@@ -3,7 +3,7 @@
 .modal {
   border-radius: 14px;
   overflow: hidden;
-  color: #474747;
+  color: var(--tm-text-color);
   position: fixed;
   left: 50%;
   z-index: 999999;
@@ -60,11 +60,15 @@
     height: 14px;
   }
 
+  &__close svg path{
+    fill: var(--tm-close-icon-fill-color);
+  }
+
   &__close:hover {
     background-color: var(--tm-close-button-bg-hover-color);
 
     svg path {
-      fill: #fff;
+      fill: var(--tm-close-icon-hover-fill-color);
     }
   }
 }
