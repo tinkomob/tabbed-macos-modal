@@ -126,6 +126,7 @@
 :deep(.modal__inner-content) {
   overflow-y: auto;
   padding: 0 16px;
+  padding-bottom: 25px;
 
   &::-webkit-scrollbar {
     width: 2px;
