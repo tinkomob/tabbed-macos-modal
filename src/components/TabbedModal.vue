@@ -261,6 +261,7 @@ const setTabsHeight = () => {
 }
 
 const setContentHeightDesktop = () => {
+  modalHeight.value = props.height
   const staticHeight = heightStaticElements(true)
   const innerContent = modal.value.querySelector('.modal__inner-content')
   if (innerContent) innerContent.style.height = utils.numberToPx(modalHeight.value - staticHeight)
