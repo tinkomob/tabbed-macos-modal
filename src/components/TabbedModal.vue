@@ -168,6 +168,7 @@ const init = async () => {
 const renderKey = computed(() => {
   history.history.value.find(item => item.modalId == modalId)?.renderKey
 })
+
 const observeDOMChanges = () => {
   const observer = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
