@@ -172,7 +172,7 @@ const observeDOMChanges = () => {
   const observer = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
-        console.log('A child node has been added or removed.')
+        // console.log('A child node has been added or removed.')
         // Call your function here
         callAfterRender()
       }
@@ -192,9 +192,9 @@ onMounted(() => {
   })
 })
 
-// onUpdated(() => {
-//   callAfterRender()
-// })
+onUpdated(() => {
+  callAfterRender()
+})
 
 onBeforeUnmount(() => {
     hammer.pan?.destroy();
