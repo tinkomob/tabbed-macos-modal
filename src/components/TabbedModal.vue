@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, useSlots, computed, h, provide, nextTick, onBeforeUnmount, onUpdated } from 'vue'
+import { ref, useSlots, computed, h, provide, nextTick, onBeforeUnmount, onUpdated, onMounted } from 'vue'
 import { useUtils } from '../composables/useUtils.js';
 import { useWindowWidth } from '../composables/useWindowWidth.js';
 import { useHistory } from '../composables/useModalStore.js';
@@ -168,10 +168,33 @@ const init = async () => {
 const renderKey = computed(() => {
   history.history.value.find(item => item.modalId == modalId)?.renderKey
 })
+const observeDOMChanges = () => {
+  const observer = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'childList') {
+        console.log('A child node has been added or removed.')
+        // Call your function here
+        callAfterRender()
+      }
+    }
+  })
 
-onUpdated(() => {
-  callAfterRender()
+  observer.observe(modal.value, { childList: true, subtree: true })
+
+  return observer
+}
+
+onMounted(() => {
+  const observer = observeDOMChanges()
+
+  onBeforeUnmount(() => {
+    observer.disconnect()
+  })
 })
+
+// onUpdated(() => {
+//   callAfterRender()
+// })
 
 onBeforeUnmount(() => {
     hammer.pan?.destroy();
