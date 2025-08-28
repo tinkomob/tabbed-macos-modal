@@ -181,12 +181,14 @@ const observeDOMChanges = () => {
              node.classList?.contains('picker') ||
              node.classList?.contains('dropdown') ||
              node.classList?.contains('popover') ||
-             node.querySelector?.('.datepicker, .date-picker, .picker, .dropdown, .popover'))
+             node.classList?.contains('dp__outer_menu_wrap') ||
+             node.classList?.contains('dp--menu-wrapper') ||
+             node.querySelector?.('.datepicker, .date-picker, .picker, .dropdown, .popover, .dp__outer_menu_wrap, .dp--menu-wrapper'))
           )
         
-        if (!isDatepickerChange) {
-          callAfterRender()
-        }
+        // if (!isDatepickerChange) {
+        //   callAfterRender()
+        // }
       }
     }
   })
@@ -225,6 +227,8 @@ const callAfterRender = async () => {
     '.picker:not([style*="display: none"]), ' +
     '.dropdown:not([style*="display: none"]), ' +
     '.popover:not([style*="display: none"]), ' +
+    '.dp__outer_menu_wrap:not([style*="display: none"]), ' +
+    '.dp--menu-wrapper:not([style*="display: none"]), ' +
     '[class*="picker"]:not([style*="display: none"]), ' +
     '[class*="dropdown"]:not([style*="display: none"])'
   )
@@ -317,7 +321,9 @@ const setContentHeightDesktop = () => {
     '.date-picker:not([style*="display: none"]), ' +
     '.picker:not([style*="display: none"]), ' +
     '.dropdown:not([style*="display: none"]), ' +
-    '.popover:not([style*="display: none"])'
+    '.popover:not([style*="display: none"]), ' +
+    '.dp__outer_menu_wrap:not([style*="display: none"]), ' +
+    '.dp--menu-wrapper:not([style*="display: none"])'
   )
   
   if (hasOpenUIElements) return
@@ -346,7 +352,9 @@ const setModalHeight = async () => {
     '.date-picker:not([style*="display: none"]), ' +
     '.picker:not([style*="display: none"]), ' +
     '.dropdown:not([style*="display: none"]), ' +
-    '.popover:not([style*="display: none"])'
+    '.popover:not([style*="display: none"]), ' +
+    '.dp__outer_menu_wrap:not([style*="display: none"]), ' +
+    '.dp--menu-wrapper:not([style*="display: none"])'
   )
   
   if (hasOpenUIElements) return
