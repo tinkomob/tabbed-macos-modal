@@ -176,16 +176,11 @@ const observeDOMChanges = () => {
         const isDatepickerChange = Array.from(mutation.addedNodes).concat(Array.from(mutation.removedNodes))
           .some(node => 
             node.nodeType === Node.ELEMENT_NODE && 
-            (node.classList?.contains('datepicker') || 
-             node.classList?.contains('date-picker') ||
-             node.classList?.contains('picker') ||
-             node.classList?.contains('dropdown') ||
-             node.classList?.contains('popover') ||
              node.classList?.contains('dp__outer_menu_wrap') ||
              node.classList?.contains('dp--menu-wrapper') ||
-             node.querySelector?.('.datepicker, .date-picker, .picker, .dropdown, .popover, .dp__outer_menu_wrap, .dp--menu-wrapper'))
+             node.querySelector?.('.dp__outer_menu_wrap, .dp--menu-wrapper')
           )
-        
+        console.log(isDatepickerChange)
         if (!isDatepickerChange) {
           callAfterRender()
         }
@@ -222,15 +217,8 @@ const callAfterRender = async () => {
   
   // Проверяем, есть ли открытые датапикеры или другие UI элементы
   const hasOpenUIElements = modal.value?.querySelector(
-    '.datepicker:not([style*="display: none"]), ' +
-    '.date-picker:not([style*="display: none"]), ' +
-    '.picker:not([style*="display: none"]), ' +
-    '.dropdown:not([style*="display: none"]), ' +
-    '.popover:not([style*="display: none"]), ' +
     '.dp__outer_menu_wrap:not([style*="display: none"]), ' +
-    '.dp--menu-wrapper:not([style*="display: none"]), ' +
-    '[class*="picker"]:not([style*="display: none"]), ' +
-    '[class*="dropdown"]:not([style*="display: none"])'
+    '.dp--menu-wrapper:not([style*="display: none"]), '
   )
   
   // Не пересчитываем высоту если открыты UI элементы
