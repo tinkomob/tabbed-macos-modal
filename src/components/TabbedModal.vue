@@ -186,9 +186,9 @@ const observeDOMChanges = () => {
              node.querySelector?.('.datepicker, .date-picker, .picker, .dropdown, .popover, .dp__outer_menu_wrap, .dp--menu-wrapper'))
           )
         
-        // if (!isDatepickerChange) {
-        //   callAfterRender()
-        // }
+        if (!isDatepickerChange) {
+          callAfterRender()
+        }
       }
     }
   })
