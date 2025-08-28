@@ -173,9 +173,34 @@ const observeDOMChanges = () => {
   const observer = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
-        console.log('A child node has been added or removed.')
-        // Call your function here
-        callAfterRender()
+        console.log('A child node has been added or removed.');
+        console.log(mutation);
+        const shouldIgnoreChange = Array.from(mutation.addedNodes).concat(Array.from(mutation.removedNodes))
+          .some(node => {
+            if (node.nodeType !== Node.ELEMENT_NODE) return false
+            
+            const element = node
+            const computedStyle = getComputedStyle(element)
+            const position = computedStyle.position
+            
+            if (position === 'absolute' || position === 'fixed') {
+              return true
+            }
+            
+            const hasDatepickerClasses = element.classList?.contains('dp__outer_menu_wrap') ||
+              element.classList?.contains('dp--menu-wrapper')
+            
+            if (hasDatepickerClasses) return true
+            
+            const hasAbsoluteOrFixedChild = element.querySelector?.('[style*="position: absolute"], [style*="position: fixed"]')
+            if (hasAbsoluteOrFixedChild) return true
+            
+            return false
+          })
+        
+        if (!shouldIgnoreChange) {
+          callAfterRender()
+        }
       }
     }
   })
