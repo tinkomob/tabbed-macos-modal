@@ -171,11 +171,19 @@ const renderKey = computed(() => {
 
 let resizeTimeout = null
 
-const debouncedCallAfterRender = () => {
+const debouncedCallAfterRender = (force = false) => {
   if (resizeTimeout) clearTimeout(resizeTimeout)
   resizeTimeout = setTimeout(() => {
-    callAfterRender()
-  }, 100)
+    if (force) {
+      if (windowWidth.value < 768) {
+        setModalHeight()
+      } else {
+        setContentHeightDesktop()
+      }
+    } else {
+      callAfterRender()
+    }
+  }, force ? 50 : 100)
 }
 
 const observeDOMChanges = () => {
@@ -185,22 +193,28 @@ const observeDOMChanges = () => {
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
         const relevantNodes = [...mutation.addedNodes, ...mutation.removedNodes].filter(node => {
-          if (node.nodeType !== Node.ELEMENT_NODE) return false
+          if (node.nodeType !== Node.ELEMENT_NODE) return true
           
           const element = node
-          const computedStyle = getComputedStyle(element)
-          const position = computedStyle.position
           
-          if (position === 'absolute' || position === 'fixed') return false
-          
-          const hasPositionedParent = element.closest('[style*="position: absolute"], [style*="position: fixed"]')
-          if (hasPositionedParent) return false
-          
-          const isUIComponent = element.matches('.datepicker, .date-picker, .picker, .dropdown, .popover, .tooltip, .overlay, .menu') ||
-                               element.querySelector('.datepicker, .date-picker, .picker, .dropdown, .popover, .tooltip, .overlay, .menu')
-          if (isUIComponent) return false
-          
-          return true
+          try {
+            const computedStyle = getComputedStyle(element)
+            const position = computedStyle.position
+            
+            if (position === 'absolute' || position === 'fixed') {
+              const hasVisibleDimensions = element.offsetWidth > 0 || element.offsetHeight > 0
+              if (!hasVisibleDimensions) return false
+            }
+            
+            const isTemporaryUI = element.matches('.datepicker, .date-picker, .picker, .dropdown, .popover, .tooltip, .overlay') ||
+                                 element.querySelector('.datepicker, .date-picker, .picker, .dropdown, .popover, .tooltip, .overlay')
+            if (isTemporaryUI) return false
+            
+            const isInContentArea = element.closest('.modal__inner-content, .modal__content, .modal__child-item-content')
+            return !!isInContentArea
+          } catch (e) {
+            return true
+          }
         })
         
         if (relevantNodes.length > 0) {
@@ -243,16 +257,12 @@ const callAfterRender = async () => {
   await nextTick()
   
   const hasOpenUIElements = modal.value?.querySelector(
-    '.datepicker:not([style*="display: none"]), ' +
-    '.date-picker:not([style*="display: none"]), ' +
-    '.picker:not([style*="display: none"]), ' +
-    '.dropdown:not([style*="display: none"]), ' +
-    '.popover:not([style*="display: none"]), ' +
-    '.tooltip:not([style*="display: none"]), ' +
-    '.overlay:not([style*="display: none"]), ' +
-    '.menu:not([style*="display: none"]), ' +
-    '[class*="picker"]:not([style*="display: none"]), ' +
-    '[class*="dropdown"]:not([style*="display: none"])'
+    '.datepicker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.date-picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.dropdown:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.popover:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.tooltip:not([style*="display: none"]):not([style*="visibility: hidden"])'
   )
   
   if (hasOpenUIElements) return
@@ -337,14 +347,12 @@ const setTabsHeight = () => {
 
 const setContentHeightDesktop = () => {
   const hasOpenUIElements = modal.value?.querySelector(
-    '.datepicker:not([style*="display: none"]), ' +
-    '.date-picker:not([style*="display: none"]), ' +
-    '.picker:not([style*="display: none"]), ' +
-    '.dropdown:not([style*="display: none"]), ' +
-    '.popover:not([style*="display: none"]), ' +
-    '.tooltip:not([style*="display: none"]), ' +
-    '.overlay:not([style*="display: none"]), ' +
-    '.menu:not([style*="display: none"])'
+    '.datepicker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.date-picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.dropdown:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.popover:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.tooltip:not([style*="display: none"]):not([style*="visibility: hidden"])'
   )
   
   if (hasOpenUIElements) return
@@ -368,14 +376,12 @@ const setModalHeight = async () => {
   const prevScroll = innerContent ? innerContent.scrollTop : 0
   
   const hasOpenUIElements = modal.value?.querySelector(
-    '.datepicker:not([style*="display: none"]), ' +
-    '.date-picker:not([style*="display: none"]), ' +
-    '.picker:not([style*="display: none"]), ' +
-    '.dropdown:not([style*="display: none"]), ' +
-    '.popover:not([style*="display: none"]), ' +
-    '.tooltip:not([style*="display: none"]), ' +
-    '.overlay:not([style*="display: none"]), ' +
-    '.menu:not([style*="display: none"])'
+    '.datepicker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.date-picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.dropdown:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.popover:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
+    '.tooltip:not([style*="display: none"]):not([style*="visibility: hidden"])'
   )
   
   if (hasOpenUIElements) return
@@ -606,7 +612,7 @@ const tabsSidebar = computed(() => {
   
   nextTick(() => {
     if (!searchValue.value && windowWidth.value < 768) {
-      callAfterRender()
+      debouncedCallAfterRender(true)
     }
   })
 
@@ -689,8 +695,13 @@ const goto = (tabName, root = false) => {
   })
 }
 
+const recalculateHeight = () => {
+  debouncedCallAfterRender(true)
+}
+
 defineExpose({
-  goto
+  goto,
+  recalculateHeight
 })
 
 init()
