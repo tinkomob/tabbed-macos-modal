@@ -169,39 +169,48 @@ const renderKey = computed(() => {
   history.history.value.find(item => item.modalId == modalId)?.renderKey
 })
 
+let resizeTimeout = null
+
+const debouncedCallAfterRender = () => {
+  if (resizeTimeout) clearTimeout(resizeTimeout)
+  resizeTimeout = setTimeout(() => {
+    callAfterRender()
+  }, 100)
+}
+
 const observeDOMChanges = () => {
   const observer = new MutationObserver((mutationsList) => {
+    let shouldRecalculate = false
+
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
-        console.log('A child node has been added or removed.');
-        console.log(mutation);
-        const shouldIgnoreChange = Array.from(mutation.addedNodes).concat(Array.from(mutation.removedNodes))
-          .some(node => {
-            if (node.nodeType !== Node.ELEMENT_NODE) return false
-            
-            const element = node
-            const computedStyle = getComputedStyle(element)
-            const position = computedStyle.position
-            
-            if (position === 'absolute' || position === 'fixed') {
-              return true
-            }
-            
-            const hasDatepickerClasses = element.classList?.contains('dp__outer_menu_wrap') ||
-              element.classList?.contains('dp--menu-wrapper')
-            
-            if (hasDatepickerClasses) return true
-            
-            const hasAbsoluteOrFixedChild = element.querySelector?.('[style*="position: absolute"], [style*="position: fixed"]')
-            if (hasAbsoluteOrFixedChild) return true
-            
-            return false
-          })
+        const relevantNodes = [...mutation.addedNodes, ...mutation.removedNodes].filter(node => {
+          if (node.nodeType !== Node.ELEMENT_NODE) return false
+          
+          const element = node
+          const computedStyle = getComputedStyle(element)
+          const position = computedStyle.position
+          
+          if (position === 'absolute' || position === 'fixed') return false
+          
+          const hasPositionedParent = element.closest('[style*="position: absolute"], [style*="position: fixed"]')
+          if (hasPositionedParent) return false
+          
+          const isUIComponent = element.matches('.datepicker, .date-picker, .picker, .dropdown, .popover, .tooltip, .overlay, .menu') ||
+                               element.querySelector('.datepicker, .date-picker, .picker, .dropdown, .popover, .tooltip, .overlay, .menu')
+          if (isUIComponent) return false
+          
+          return true
+        })
         
-        if (!shouldIgnoreChange) {
-          callAfterRender()
+        if (relevantNodes.length > 0) {
+          shouldRecalculate = true
         }
       }
+    }
+    
+    if (shouldRecalculate) {
+      debouncedCallAfterRender()
     }
   })
 
@@ -223,6 +232,7 @@ onUpdated(() => {
 })
 
 onBeforeUnmount(() => {
+    if (resizeTimeout) clearTimeout(resizeTimeout)
     hammer.pan?.destroy();
     hammer.content?.destroy();
     enableOverflow()
@@ -231,6 +241,22 @@ onBeforeUnmount(() => {
 
 const callAfterRender = async () => {
   await nextTick()
+  
+  const hasOpenUIElements = modal.value?.querySelector(
+    '.datepicker:not([style*="display: none"]), ' +
+    '.date-picker:not([style*="display: none"]), ' +
+    '.picker:not([style*="display: none"]), ' +
+    '.dropdown:not([style*="display: none"]), ' +
+    '.popover:not([style*="display: none"]), ' +
+    '.tooltip:not([style*="display: none"]), ' +
+    '.overlay:not([style*="display: none"]), ' +
+    '.menu:not([style*="display: none"]), ' +
+    '[class*="picker"]:not([style*="display: none"]), ' +
+    '[class*="dropdown"]:not([style*="display: none"])'
+  )
+  
+  if (hasOpenUIElements) return
+  
   if (windowWidth.value < 768) {
     setModalHeight()
   }
@@ -310,23 +336,50 @@ const setTabsHeight = () => {
 }
 
 const setContentHeightDesktop = () => {
+  const hasOpenUIElements = modal.value?.querySelector(
+    '.datepicker:not([style*="display: none"]), ' +
+    '.date-picker:not([style*="display: none"]), ' +
+    '.picker:not([style*="display: none"]), ' +
+    '.dropdown:not([style*="display: none"]), ' +
+    '.popover:not([style*="display: none"]), ' +
+    '.tooltip:not([style*="display: none"]), ' +
+    '.overlay:not([style*="display: none"]), ' +
+    '.menu:not([style*="display: none"])'
+  )
+  
+  if (hasOpenUIElements) return
+
   modalHeight.value = props.height
   const staticHeight = heightStaticElements(true)
   const innerContent = modal.value.querySelector('.modal__inner-content')
+  const prevScroll = innerContent ? innerContent.scrollTop : 0
   if (innerContent) innerContent.style.height = utils.numberToPx(modalHeight.value - staticHeight)
-
   if (!props.simple) setTabsHeight()
+  if (innerContent) {
+    nextTick(() => {
+      innerContent.scrollTop = Math.min(prevScroll, innerContent.scrollHeight - innerContent.clientHeight || 0)
+    })
+  }
 }
 
 const setModalHeight = async () => {
   const staticHeight = heightStaticElements()
   const innerContent = modal.value.querySelector('.modal__inner-content')
+  const prevScroll = innerContent ? innerContent.scrollTop : 0
+  
+  const hasOpenUIElements = modal.value?.querySelector(
+    '.datepicker:not([style*="display: none"]), ' +
+    '.date-picker:not([style*="display: none"]), ' +
+    '.picker:not([style*="display: none"]), ' +
+    '.dropdown:not([style*="display: none"]), ' +
+    '.popover:not([style*="display: none"]), ' +
+    '.tooltip:not([style*="display: none"]), ' +
+    '.overlay:not([style*="display: none"]), ' +
+    '.menu:not([style*="display: none"])'
+  )
+  
+  if (hasOpenUIElements) return
 
-  /* 
-    imagesLoaded solves the problem with dynamically calculating the height of the modal if there are photos, 
-    because the photos are not loaded immediately, 
-    and until then the height is not determined (as I understand)
-  */
   await utils.imagesIsLoaded(innerContent)
 
   if (innerContent && innerContent.style.height && innerContent.getAttribute('style')) {
@@ -353,6 +406,11 @@ const setModalHeight = async () => {
         else sectionTabs.style.height = initTabsHeight.value
       }
     }
+  }
+  if (innerContent) {
+    nextTick(() => {
+      innerContent.scrollTop = Math.min(prevScroll, innerContent.scrollHeight - innerContent.clientHeight || 0)
+    })
   }
   return
 }
@@ -532,25 +590,23 @@ const search = (value) => {
 }
 
 const tabsSidebar = computed(() => {
-  let tabs = getOnlyComponentsInSlot(slots.default()).map(item => {
-    return {
-      name: item.props.name,
-      title: item.props.title
-    }
-  })
+  let tabs = tabbedModalComponents.value.map(item => ({
+    name: item.props?.name,
+    title: item.props?.title
+  }))
 
   if (props.sidebarSearch && searchValue.value) {
-    let searchText = handleSearchText(searchValue.value)
+    const searchText = handleSearchText(searchValue.value)
 
     tabs = tabs.filter(item => {
-      let name = handleSearchText(item.title ?? item.name)
-      if (name.indexOf(searchText) !== -1) return name.indexOf(searchText) !== -1;
+      const name = handleSearchText(item.title ?? item.name ?? '')
+      return name.includes(searchText)
     })
   }
   
   nextTick(() => {
     if (!searchValue.value && windowWidth.value < 768) {
-      setModalHeight()    
+      callAfterRender()
     }
   })
 
@@ -558,23 +614,33 @@ const tabsSidebar = computed(() => {
 })
 
 
+const tabbedModalComponents = computed(() => {
+  return slots.default()?.filter(item => item.type.__name === 'TabbedModalItem') || []
+})
+
+const nonTabbedModalContent = computed(() => {
+  return slots.default()?.filter(item => item.type.__name !== 'TabbedModalItem') || []
+})
+
 const render = () => {
+  const tabbedComponents = tabbedModalComponents.value
   
   if (!props.simple && props.sectionsMode && !currentHistory.value.length && windowWidth.value < 768) {
     return h('div', {class: 'modal__child-item-content' }, [h('div', {class: 'modal__inner-content' }, '' )])
   }
 
   if (props.simple) {
-    return h('div', {class: 'modal__child-item-content' }, [h('div', {class: 'modal__inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
+    return h('div', {class: 'modal__child-item-content' }, [h('div', {class: 'modal__inner-content' }, nonTabbedModalContent.value)])
   }
 
-  if (!slots.default().filter(item => item.type.__name == 'TabbedModalItem').length) {
+  if (!tabbedComponents.length) {
     return h('div', {}, [
       h('div', { class: 'modal__child-item-header' }, [h('span', { class: 'header__title' }, '')]),
-      h('div', { class: 'modal__child-item-content' }, [h('div', { class: 'modal__inner-content' }, slots.default().filter(item => item.type.__name != 'TabbedModalItem'))])
+      h('div', { class: 'modal__child-item-content' }, [h('div', { class: 'modal__inner-content' }, nonTabbedModalContent.value)])
     ])
   }
-  let comp = findComp(slots.default())
+
+  let comp = findComp(tabbedComponents)
   if (comp && comp.props) { 
     let title = null
 
@@ -585,32 +651,29 @@ const render = () => {
     if (title) history.setCurrentTitle(title, modalId)
   }
 
-  // key is needed so that the tab content is rewritten correctly when switching in navigation
   return h('div', {key: comp.key}, comp)
 };
 
 const findComp = (slotsArray) => {
-  slotsArray = getOnlyComponentsInSlot(slotsArray)
+  if (!slotsArray?.length || !current.value) return null
+  
   for (let slot of slotsArray) {
-    if (slot.props.name == current.value.current) {
+    if (slot.props?.name === current.value.current) {
       slot.key = utils.makeId(10)
       return slot
     }
+    
     if (slot.component?.exposed?.defaultSlots) {
-      
       let slotSub = findComp(slot.component.exposed.defaultSlots)
-      if (slotSub) { 
-        return slotSub
-      }
+      if (slotSub) return slotSub
     } 
     
-    if (typeof slot?.children == 'object') {
+    if (typeof slot?.children === 'object' && slot.children.default) {
       let slotSub = findComp(slot.children.default())
-      if (slotSub) { 
-        return slotSub
-      }
+      if (slotSub) return slotSub
     }
   }
+  return null
 }
 
 const gotoTab = ({tabName, root = false}) => {
