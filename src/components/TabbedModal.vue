@@ -233,6 +233,25 @@ const observeDOMChanges = () => {
   return observer
 }
 
+// helper: detect really open overlay UI elements (absolute/fixed and visible)
+const hasBlockingUI = () => {
+  if (!modal.value) return false
+  const selectors = ['.datepicker', '.date-picker', '.picker', '.dropdown', '.popover', '.tooltip']
+  const nodes = modal.value.querySelectorAll(selectors.join(', '))
+  if (!nodes?.length) return false
+  for (const el of nodes) {
+    try {
+      const style = getComputedStyle(el)
+      if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) continue
+      const pos = style.position
+      if (pos !== 'absolute' && pos !== 'fixed') continue
+      const rect = el.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) return true
+    } catch {}
+  }
+  return false
+}
+
 onMounted(() => {
   const observer = observeDOMChanges()
 
@@ -255,17 +274,9 @@ onBeforeUnmount(() => {
 
 const callAfterRender = async () => {
   await nextTick()
-  
-  const hasOpenUIElements = modal.value?.querySelector(
-    '.datepicker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.date-picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.dropdown:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.popover:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.tooltip:not([style*="display: none"]):not([style*="visibility: hidden"])'
-  )
-  
-  if (hasOpenUIElements) return
+  const innerContent = modal.value?.querySelector('.modal__inner-content')
+  const initialized = !!(innerContent && innerContent.style && innerContent.style.height)
+  if (hasBlockingUI() && initialized) return
   
   if (windowWidth.value < 768) {
     setModalHeight()
@@ -345,23 +356,27 @@ const setTabsHeight = () => {
 
 }
 
+const ensureScrollable = (el) => {
+  if (!el) return
+  try {
+    el.style.overflowY = 'auto'
+    el.style.webkitOverflowScrolling = 'touch'
+    el.style.touchAction = 'pan-y'
+    el.style.overscrollBehavior = 'contain'
+  } catch {}
+}
+
 const setContentHeightDesktop = () => {
-  const hasOpenUIElements = modal.value?.querySelector(
-    '.datepicker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.date-picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.dropdown:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.popover:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.tooltip:not([style*="display: none"]):not([style*="visibility: hidden"])'
-  )
-  
-  if (hasOpenUIElements) return
+  const innerContent = modal.value.querySelector('.modal__inner-content')
+  const initialized = !!(innerContent && innerContent.style && innerContent.style.height)
+  if (hasBlockingUI() && initialized) return
 
   modalHeight.value = props.height
   const staticHeight = heightStaticElements(true)
-  const innerContent = modal.value.querySelector('.modal__inner-content')
+  
   const prevScroll = innerContent ? innerContent.scrollTop : 0
   if (innerContent) innerContent.style.height = utils.numberToPx(modalHeight.value - staticHeight)
+  ensureScrollable(innerContent)
   if (!props.simple) setTabsHeight()
   if (innerContent) {
     nextTick(() => {
@@ -375,16 +390,8 @@ const setModalHeight = async () => {
   const innerContent = modal.value.querySelector('.modal__inner-content')
   const prevScroll = innerContent ? innerContent.scrollTop : 0
   
-  const hasOpenUIElements = modal.value?.querySelector(
-    '.datepicker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.date-picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.picker:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.dropdown:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.popover:not([style*="display: none"]):not([style*="visibility: hidden"]), ' +
-    '.tooltip:not([style*="display: none"]):not([style*="visibility: hidden"])'
-  )
-  
-  if (hasOpenUIElements) return
+  const initialized = !!(innerContent && innerContent.style && innerContent.style.height)
+  if (hasBlockingUI() && initialized) return
 
   await utils.imagesIsLoaded(innerContent)
 
@@ -401,6 +408,7 @@ const setModalHeight = async () => {
   modalHeight.value = h
 
   if (innerContent) innerContent.style.height = utils.numberToPx(Math.abs(modalHeight.value - staticHeight))
+  ensureScrollable(innerContent)
   if (props.sectionsMode) {
     const heightStatic = heightStaticSectionsMode()
     const sectionTabs = modal.value.querySelector('.sections-mode')
