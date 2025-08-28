@@ -1,3 +1,4 @@
+
 <template>
   <div class="tabbed-modal modal-item" :class="{opened: modalOpened, closed: modalOpened === false, moving: moving}" @mousedown="clickOnBottomSheet" 
     @touchstart="clickOnBottomSheet">
@@ -172,18 +173,9 @@ const observeDOMChanges = () => {
   const observer = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
-        // Игнорируем изменения от датапикеров и других UI элементов
-        const isDatepickerChange = Array.from(mutation.addedNodes).concat(Array.from(mutation.removedNodes))
-          .some(node => 
-            node.nodeType === Node.ELEMENT_NODE && 
-             node.classList?.contains('dp__outer_menu_wrap') ||
-             node.classList?.contains('dp--menu-wrapper') ||
-             node.querySelector?.('.dp__outer_menu_wrap, .dp--menu-wrapper')
-          )
-        console.log(isDatepickerChange)
-        if (!isDatepickerChange) {
-          callAfterRender()
-        }
+        console.log('A child node has been added or removed.')
+        // Call your function here
+        callAfterRender()
       }
     }
   })
@@ -214,16 +206,6 @@ onBeforeUnmount(() => {
 
 const callAfterRender = async () => {
   await nextTick()
-  
-  // Проверяем, есть ли открытые датапикеры или другие UI элементы
-  const hasOpenUIElements = modal.value?.querySelector(
-    '.dp__outer_menu_wrap:not([style*="display: none"]), ' +
-    '.dp--menu-wrapper:not([style*="display: none"]), '
-  )
-  
-  // Не пересчитываем высоту если открыты UI элементы
-  if (hasOpenUIElements) return
-  
   if (windowWidth.value < 768) {
     setModalHeight()
   }
@@ -303,50 +285,23 @@ const setTabsHeight = () => {
 }
 
 const setContentHeightDesktop = () => {
-  // Проверяем, есть ли открытые UI элементы перед пересчетом
-  const hasOpenUIElements = modal.value?.querySelector(
-    '.datepicker:not([style*="display: none"]), ' +
-    '.date-picker:not([style*="display: none"]), ' +
-    '.picker:not([style*="display: none"]), ' +
-    '.dropdown:not([style*="display: none"]), ' +
-    '.popover:not([style*="display: none"]), ' +
-    '.dp__outer_menu_wrap:not([style*="display: none"]), ' +
-    '.dp--menu-wrapper:not([style*="display: none"])'
-  )
-  
-  if (hasOpenUIElements) return
-
   modalHeight.value = props.height
   const staticHeight = heightStaticElements(true)
   const innerContent = modal.value.querySelector('.modal__inner-content')
-  const prevScroll = innerContent ? innerContent.scrollTop : 0
   if (innerContent) innerContent.style.height = utils.numberToPx(modalHeight.value - staticHeight)
+
   if (!props.simple) setTabsHeight()
-  if (innerContent) {
-    nextTick(() => {
-      innerContent.scrollTop = Math.min(prevScroll, innerContent.scrollHeight - innerContent.clientHeight || 0)
-    })
-  }
 }
 
 const setModalHeight = async () => {
   const staticHeight = heightStaticElements()
   const innerContent = modal.value.querySelector('.modal__inner-content')
-  const prevScroll = innerContent ? innerContent.scrollTop : 0
-  
-  // Проверяем, есть ли открытые UI элементы перед пересчетом
-  const hasOpenUIElements = modal.value?.querySelector(
-    '.datepicker:not([style*="display: none"]), ' +
-    '.date-picker:not([style*="display: none"]), ' +
-    '.picker:not([style*="display: none"]), ' +
-    '.dropdown:not([style*="display: none"]), ' +
-    '.popover:not([style*="display: none"]), ' +
-    '.dp__outer_menu_wrap:not([style*="display: none"]), ' +
-    '.dp--menu-wrapper:not([style*="display: none"])'
-  )
-  
-  if (hasOpenUIElements) return
 
+  /* 
+    imagesLoaded solves the problem with dynamically calculating the height of the modal if there are photos, 
+    because the photos are not loaded immediately, 
+    and until then the height is not determined (as I understand)
+  */
   await utils.imagesIsLoaded(innerContent)
 
   if (innerContent && innerContent.style.height && innerContent.getAttribute('style')) {
@@ -373,11 +328,6 @@ const setModalHeight = async () => {
         else sectionTabs.style.height = initTabsHeight.value
       }
     }
-  }
-  if (innerContent) {
-    nextTick(() => {
-      innerContent.scrollTop = Math.min(prevScroll, innerContent.scrollHeight - innerContent.clientHeight || 0)
-    })
   }
   return
 }
